@@ -1,0 +1,10 @@
+# CMake build files and output
+build/
+bin/
+lib/
+
+# NeoVim files
+.nvim/
+
+# ClangD index cache
+.cache/
