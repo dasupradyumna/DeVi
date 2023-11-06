@@ -1,7 +1,10 @@
 #include "devi/core/array.hh"
 
+#include <iostream>
+
 int main()
 {
-  devi::core::array<int> t;
-  t.test();
+  devi::core::bool8 t;
+  devi::core::native_type<devi::core::type::float32>::type f { 3.145 };
+  std::cout << f << std::endl;
 }
