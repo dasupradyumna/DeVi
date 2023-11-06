@@ -1,6 +1,6 @@
 #pragma once
 
-namespace devi
+namespace devi::core
 {
   template<typename _DType>
   class array {

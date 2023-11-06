@@ -1,8 +1,8 @@
-#include "devi/array.hh"
+#include "devi/core/array.hh"
 
 #include <iostream>
 
-namespace devi
+namespace devi::core
 {
   template<typename _DType>
   array<_DType>::array() noexcept

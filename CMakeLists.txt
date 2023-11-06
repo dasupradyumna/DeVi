@@ -11,7 +11,7 @@ endif()
 
 # main library
 
-add_library(devi SHARED src/array.cc)
+add_library(devi SHARED src/core/array.cc)
 
 target_include_directories(devi PUBLIC include)
 target_compile_options(devi PUBLIC -Wall)
@@ -20,7 +20,7 @@ install(TARGETS devi LIBRARY DESTINATION lib)
 
 # test
 
-add_executable(test_array test/array.cc)
+add_executable(test_array test/core/array.cc)
 
 target_include_directories(test_array PRIVATE include)
 target_compile_options(test_array PRIVATE -Wall)
