@@ -1,0 +1,107 @@
+#ifndef DEVI_CORE_DIMENSION_SHAPE
+#define DEVI_CORE_DIMENSION_SHAPE
+
+#include <memory>
+
+using std::size_t;
+
+namespace devi::core
+{
+  // Represents the shape of an array and its dimensionality
+  class shape {
+  public:
+
+    /* Constructs and returns a `shape` from a variadic list of integer arguments
+     *
+     * Errors:
+     * 1) `new` can throw an `std::bad_alloc` exception
+     * 2) compile-time error if the argument list has more than 10 integers
+     */
+    template<typename... _Args,
+      typename = std::enable_if_t<(std::is_integral_v<_Args> && ...)>>
+    shape(_Args... args);
+
+    ~shape() noexcept = default;
+
+    //////////////////////// COPY-MOVE SEMANTICS /////////////////////////
+
+    shape(const shape &copy);
+    shape(shape &&move) noexcept;
+    shape &operator=(shape rhs) noexcept;
+
+    ////////////////////////////// GENERAL ///////////////////////////////
+
+    // Returns the dimensionality of the current shape
+    unsigned ndims() const noexcept;
+
+    // Returns the total size held by the current shape
+    size_t size() const noexcept;
+
+    // Swap state with existing shape
+    void swap(shape &b) noexcept;
+    // Swap state with temporary shape
+    void swap(shape &&b) noexcept;
+
+  private:
+
+    std::unique_ptr<size_t[]> p_data;
+    unsigned m_size;
+    static constexpr unsigned MAX_SIZE { 10 };
+  };
+
+}  // namespace devi::core
+
+//////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////// IMPLEMENTATION /////////////////////////////////////
+
+#include <numeric>
+
+namespace devi::core
+{
+  template<typename... _Args, typename>
+  shape::shape(_Args... args) : p_data { new size_t[MAX_SIZE] {} }, m_size { 0 }
+  {
+    static_assert(sizeof...(args) > 0 && sizeof...(args) <= MAX_SIZE,
+      "No. of arguments to devi::core::shape() must belong to [1, 10]");
+    ((p_data[m_size++] = args), ...);
+  }
+
+  //////////////////////// COPY-MOVE SEMANTICS /////////////////////////
+
+  shape::shape(const shape &copy)
+    : p_data { new size_t[MAX_SIZE] }, m_size { copy.m_size }
+  {
+    std::copy(copy.p_data.get(), copy.p_data.get() + m_size, p_data.get());
+  }
+
+  shape::shape(shape &&move) noexcept
+    : p_data { std::move(move.p_data) }, m_size { move.m_size }
+  { }
+
+  shape &shape::operator=(shape rhs) noexcept
+  {
+    this->swap(rhs);
+    return *this;
+  }
+
+  ////////////////////////////// GENERAL ///////////////////////////////
+
+  unsigned shape::ndims() const noexcept { return m_size; }
+
+  size_t shape::size() const noexcept
+  {
+    return std::accumulate(
+      p_data.get(), p_data.get() + m_size, 1UL, std::multiplies<size_t> {});
+  }
+
+  void shape::swap(shape &b) noexcept
+  {
+    std::swap(p_data, b.p_data);
+    std::swap(m_size, b.m_size);
+  }
+
+  void shape::swap(shape &&b) noexcept { this->swap(b); }
+}
+
+#endif
+// vim: ft=cpp

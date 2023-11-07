@@ -1,6 +1,7 @@
 #ifndef DEVI_CORE_ARRAY
 #define DEVI_CORE_ARRAY
 
+#include "dimension/shape"
 #include "types"
 
 namespace devi::core
@@ -23,14 +24,18 @@ namespace devi::core
 
   template<type _DType>
   class array {
-  public:
     using native_type = typename native_type<_DType>::type;
 
-    array() noexcept;
-    ~array() noexcept;
+  public:
+
+    array(const shape &s);
+    array(shape &&s);
+    ~array() noexcept = default;
 
   private:
-    native_type *p_data;
+
+    std::unique_ptr<native_type[]> p_data;
+    shape m_shape;
   };
 
 }  // namespace devi::core
@@ -42,21 +47,15 @@ namespace devi::core
 
 namespace devi::core
 {
-  //////////////////////////////////////////////////////////////////////
-  /////////////////////////////// ARRAY ////////////////////////////////
+  template<type _DType>
+  array<_DType>::array(const shape &s)
+    : p_data { new native_type[s.size()] {} }, m_shape { s }
+  { }
 
   template<type _DType>
-  array<_DType>::array() noexcept : p_data { new native_type[10] }
-  {
-    std::cout << "constructing array[10]: " << (_DType == type::bool8) << std::endl;
-  }
-
-  template<type _DType>
-  array<_DType>::~array() noexcept
-  {
-    delete[] p_data;
-  }
-
+  array<_DType>::array(shape &&s)
+    : p_data { new native_type[s.size()] {} }, m_shape { std::move(s) }
+  { }
 }  // namespace devi::core
 
 #endif
