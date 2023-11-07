@@ -1,0 +1,63 @@
+#ifndef DEVI_CORE_ARRAY
+#define DEVI_CORE_ARRAY
+
+#include "types"
+
+namespace devi::core
+{
+  template<type _DType>
+  class array;
+
+  // aliases
+  using bool8   = array<type::bool8>;
+  using int8    = array<type::int8>;
+  using int16   = array<type::int16>;
+  using int32   = array<type::int32>;
+  using int64   = array<type::int64>;
+  using uint8   = array<type::uint8>;
+  using uint16  = array<type::uint16>;
+  using uint32  = array<type::uint32>;
+  using uint64  = array<type::uint64>;
+  using float32 = array<type::float32>;
+  using float64 = array<type::float64>;
+
+  template<type _DType>
+  class array {
+  public:
+    using native_type = typename native_type<_DType>::type;
+
+    array() noexcept;
+    ~array() noexcept;
+
+  private:
+    native_type *p_data;
+  };
+
+}  // namespace devi::core
+
+//////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////// IMPLEMENTATION /////////////////////////////////////
+
+#include <iostream>
+
+namespace devi::core
+{
+  //////////////////////////////////////////////////////////////////////
+  /////////////////////////////// ARRAY ////////////////////////////////
+
+  template<type _DType>
+  array<_DType>::array() noexcept : p_data { new native_type[10] }
+  {
+    std::cout << "constructing array[10]: " << (_DType == type::bool8) << std::endl;
+  }
+
+  template<type _DType>
+  array<_DType>::~array() noexcept
+  {
+    delete[] p_data;
+  }
+
+}  // namespace devi::core
+
+#endif
+// vim: ft=cpp

@@ -1,6 +1,4 @@
-#include "devi/core/array.hh"
-
-#include <iostream>
+#include <devi/core/array>
 
 int main()
 {

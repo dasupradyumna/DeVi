@@ -1,4 +1,5 @@
-#pragma once
+#ifndef DEVI_CORE_TYPES
+#define DEVI_CORE_TYPES
 
 #include <climits>
 #include <cstdint>
@@ -28,7 +29,7 @@ namespace devi::core
     float64
   };
 
-  // WARN: hide this from end users somehow (hidden attribute or implementation?)
+  // FIX: hide this from end users somehow (hidden attribute or implementation?)
   template<type _Type>
   struct native_type;
 
@@ -51,3 +52,6 @@ namespace devi::core
   CORE2NATIVE(float64, double);
 
 }  // namespace devi::core
+
+#endif
+// vim: ft=cpp

@@ -81,7 +81,7 @@ IndentCaseBlocks : false
 IndentCaseLabels : true
 IndentExternBlock : Indent
 IndentGotoLabels : false
-IndentPPDirectives : BeforeHash
+IndentPPDirectives : None
 IndentRequires : true
 IndentWidth : 2
 IndentWrappedFunctionNames : false
@@ -94,7 +94,6 @@ MaxEmptyLinesToKeep : 1
 
 NamespaceIndentation : All
 
-PPIndentWidth : 1
 PackConstructorInitializers : NextLine
 PointerAlignment : Right
 
