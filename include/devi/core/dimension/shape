@@ -3,8 +3,6 @@
 
 #include <memory>
 
-using std::size_t;
-
 namespace devi::core
 {
   // Represents the shape of an array and its dimensionality
@@ -29,13 +27,23 @@ namespace devi::core
     shape(shape &&move) noexcept;
     shape &operator=(shape rhs) noexcept;
 
+    ///////////////////////// OPERATOR OVERLOADS /////////////////////////
+
+    bool operator==(const shape &other) const noexcept;
+    bool operator!=(const shape &other) const noexcept;
+    std::size_t operator[](const unsigned idx) const;
+    friend std::ostream &operator<<(std::ostream &out, const shape &s);
+
     ////////////////////////////// GENERAL ///////////////////////////////
 
     // Returns the dimensionality of the current shape
     unsigned ndims() const noexcept;
 
     // Returns the total size held by the current shape
-    size_t size() const noexcept;
+    std::size_t size() const noexcept;
+
+    // Returns the string representation
+    std::string str() const;
 
     // Swap state with existing shape
     void swap(shape &b) noexcept;
@@ -44,7 +52,7 @@ namespace devi::core
 
   private:
 
-    std::unique_ptr<size_t[]> p_data;
+    std::unique_ptr<std::size_t[]> p_data;
     unsigned m_size;
     static constexpr unsigned MAX_SIZE { 10 };
   };
@@ -59,7 +67,7 @@ namespace devi::core
 namespace devi::core
 {
   template<typename... _Args, typename>
-  shape::shape(_Args... args) : p_data { new size_t[MAX_SIZE] {} }, m_size { 0 }
+  shape::shape(_Args... args) : p_data { new std::size_t[MAX_SIZE] {} }, m_size { 0 }
   {
     static_assert(sizeof...(args) > 0 && sizeof...(args) <= MAX_SIZE,
       "No. of arguments to devi::core::shape() must belong to [1, 10]");
@@ -69,7 +77,7 @@ namespace devi::core
   //////////////////////// COPY-MOVE SEMANTICS /////////////////////////
 
   shape::shape(const shape &copy)
-    : p_data { new size_t[MAX_SIZE] }, m_size { copy.m_size }
+    : p_data { new std::size_t[MAX_SIZE] }, m_size { copy.m_size }
   {
     std::copy(copy.p_data.get(), copy.p_data.get() + m_size, p_data.get());
   }
@@ -84,14 +92,39 @@ namespace devi::core
     return *this;
   }
 
+  ///////////////////////// OPERATOR OVERLOADS /////////////////////////
+
+  bool shape::operator==(const shape &other) const noexcept
+  {
+    return m_size == other.m_size
+        && std::equal(p_data.get(), p_data.get() + m_size, other.p_data.get());
+  }
+
+  bool shape::operator!=(const shape &other) const noexcept { return !(*this == other); }
+
+  std::size_t shape::operator[](const unsigned idx) const
+  {
+    if (idx >= m_size) throw std::out_of_range { "index out of bounds" };
+    return p_data[idx];
+  }
+
+  std::ostream &operator<<(std::ostream &out, const shape &s) { return out << s.str(); }
+
   ////////////////////////////// GENERAL ///////////////////////////////
 
   unsigned shape::ndims() const noexcept { return m_size; }
 
-  size_t shape::size() const noexcept
+  std::size_t shape::size() const noexcept
   {
     return std::accumulate(
-      p_data.get(), p_data.get() + m_size, 1UL, std::multiplies<size_t> {});
+      p_data.get(), p_data.get() + m_size, 1UL, std::multiplies<std::size_t> {});
+  }
+
+  std::string shape::str() const
+  {
+    using namespace std;
+    static constexpr auto join = [](auto &a, auto b) { return a + ' ' + to_string(b); };
+    return accumulate(p_data.get(), p_data.get() + m_size, string { '(' }, join) + " )";
   }
 
   void shape::swap(shape &b) noexcept

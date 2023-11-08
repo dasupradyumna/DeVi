@@ -8,11 +8,11 @@ if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
       CACHE PATH "Installation path prefix" FORCE)
 endif()
 
-# 1) devi::core::array
-add_executable(test_array core/array.cc)
-target_include_directories(test_array PRIVATE ../include)
-target_compile_options(test_array PRIVATE -Wall)
-install(TARGETS test_array RUNTIME DESTINATION bin)
+# 1) devi::core::shape
+add_executable(test_shape core/shape.cc)
+target_include_directories(test_shape PRIVATE ../include)
+target_compile_options(test_shape PRIVATE -Wall)
+install(TARGETS test_shape RUNTIME DESTINATION bin)
 
 # compile commands
 if(CMAKE_EXPORT_COMPILE_COMMANDS)
