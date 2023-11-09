@@ -53,6 +53,13 @@ namespace devi::core
     array(array &&move) noexcept;
     array &operator=(array rhs) noexcept;
 
+    ///////////////////////// OPERATOR OVERLOADS /////////////////////////
+
+    bool operator==(const array &other) const noexcept;
+    bool operator!=(const array &other) const noexcept;
+    native_type &operator[](const std::size_t flat_idx) noexcept;
+    native_type operator[](const std::size_t flat_idx) const noexcept;
+
     ////////////////////////////// GENERAL ///////////////////////////////
 
     // Sets every element in the array to `value`
@@ -116,6 +123,35 @@ namespace devi::core
   {
     this->swap(rhs);
     return *this;
+  }
+
+  ///////////////////////// OPERATOR OVERLOADS /////////////////////////
+
+  template<type _DType>
+  bool array<_DType>::operator==(const array &other) const noexcept
+  {
+    return m_shape == other.m_shape
+        && std::equal(p_data.get(), p_data.get() + m_shape.size(), other.p_data.get());
+  }
+
+  template<type _DType>
+  bool array<_DType>::operator!=(const array &other) const noexcept
+  {
+    return !(*this == other);
+  }
+
+  template<type _DType>
+  typename array<_DType>::native_type &array<_DType>::operator[](
+    const std::size_t flat_idx) noexcept
+  {
+    return p_data[flat_idx];
+  }
+
+  template<type _DType>
+  typename array<_DType>::native_type array<_DType>::operator[](
+    const std::size_t flat_idx) const noexcept
+  {
+    return const_cast<array &>(*this)[flat_idx];
   }
 
   ////////////////////////////// GENERAL ///////////////////////////////

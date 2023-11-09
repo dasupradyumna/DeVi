@@ -1,6 +1,9 @@
 #ifndef DEVI_TEST_UTILS_HH
 #define DEVI_TEST_UTILS_HH
 
+// Wraps arguments (which contain commas) passed to other macros
+#define CODE(...) __VA_ARGS__
+
 /* Function-friendly assertion
  * Returns false if condition fails, continues execution otherwise
  */

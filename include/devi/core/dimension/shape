@@ -31,7 +31,7 @@ namespace devi::core
 
     bool operator==(const shape &other) const noexcept;
     bool operator!=(const shape &other) const noexcept;
-    std::size_t operator[](const unsigned idx) const;
+    std::size_t operator[](const unsigned idx) const noexcept;
     friend std::ostream &operator<<(std::ostream &out, const shape &s);
 
     ////////////////////////////// GENERAL ///////////////////////////////
@@ -103,11 +103,7 @@ namespace devi::core
 
   bool shape::operator!=(const shape &other) const noexcept { return !(*this == other); }
 
-  std::size_t shape::operator[](const unsigned idx) const
-  {
-    if (idx >= m_size) throw std::out_of_range { "index out of bounds" };
-    return p_data[idx];
-  }
+  std::size_t shape::operator[](const unsigned idx) const noexcept { return p_data[idx]; }
 
   std::ostream &operator<<(std::ostream &out, const shape &s) { return out << s.str(); }
 
