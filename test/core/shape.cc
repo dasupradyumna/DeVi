@@ -11,8 +11,6 @@ unsigned operators()
   // indexing
   ASSERT(1, s1[0] == 3 && s1[1] == 10 && s1[2] == 1);
   ASSERT(2, s2[0] == 5 && s2[1] == 0);
-  EXPECT_THROW(std::out_of_range, s1[10]);
-  EXPECT_THROW(std::out_of_range, s2[5]);
 
   // equality
   ASSERT(3, s1 == s1 && s1 != s2 && s2 == s2);
@@ -50,9 +48,11 @@ unsigned copy_move()
 
 unsigned general()
 {
-  ASSERT(1, s1.ndims() == 3 && s1.size() == 30);
-  ASSERT(2, s2.ndims() == 2 && s2.size() == 0);
-  ASSERT(3, s1.str() == "( 3 10 1 )" && s2.str() == "( 5 0 )");
+  EXPECT_THROW(1, std::out_of_range, s1.at(10));
+  EXPECT_THROW(2, std::out_of_range, s2.at(5));
+  ASSERT(3, s1.ndims() == 3 && s1.size() == 30);
+  ASSERT(4, s2.ndims() == 2 && s2.size() == 0);
+  ASSERT(5, s1.str() == "( 3 10 1 )" && s2.str() == "( 5 0 )");
 
   TEST_SUCCESS;
 }

@@ -13,15 +13,15 @@
 /* Expect-exception block
  * Returns false if the input code snippet does not throw the specified exception
  */
-#define EXPECT_THROW(exception, code) \
-  while (true) {                      \
-    try {                             \
-      code;                           \
-    }                                 \
-    catch (const exception &) {       \
-      break;                          \
-    }                                 \
-    return false;                     \
+#define EXPECT_THROW(fail_code, exception, snippet) \
+  while (true) {                                    \
+    try {                                           \
+      snippet;                                      \
+    }                                               \
+    catch (const exception &) {                     \
+      break;                                        \
+    }                                               \
+    return fail_code;                               \
   }
 
 // Success statement

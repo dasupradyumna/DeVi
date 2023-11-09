@@ -46,6 +46,17 @@ unsigned copy_move()
   TEST_SUCCESS;
 }
 
+unsigned getters()
+{
+  EXPECT_THROW(1, std::out_of_range, a.at(5));
+  ASSERT(2, a.ndims() == 2);
+  ASSERT(3, a.shape() == shape(2, 2));
+  ASSERT(4, a.size() == 4);
+  ASSERT(5, a.type() == type::int32);
+
+  TEST_SUCCESS;
+}
+
 int main()
 {
   UnitTestRunner tester { "core/array", "devi::core::array" };
@@ -53,6 +64,7 @@ int main()
   tester.run("Operators", operators);
   tester.run("Construction", construction);
   tester.run("Copy-Move", copy_move);
+  tester.run("Getters", getters);
 
   return tester.passed() == tester.total() ? EXIT_SUCCESS : EXIT_FAILURE;
 }
