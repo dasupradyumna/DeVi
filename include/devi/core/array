@@ -9,7 +9,7 @@ namespace devi::core
   template<type _DType>
   class array;
 
-  // aliases
+  // array type aliases
   using bool8   = array<type::bool8>;
   using int8    = array<type::int8>;
   using int16   = array<type::int16>;
@@ -28,9 +28,40 @@ namespace devi::core
 
   public:
 
+    /* Constructs a zero-initialized `array` with its shape specified by the argument `s`
+     *
+     * Errors:
+     * `new` can throw an `std::bad_alloc` exception
+     */
     array(const shape &s);
     array(shape &&s);
+
+    /* Constructs an `array` with every element equal to `fill` and its shape specified by
+     * the argument `s`
+     *
+     * Errors:
+     * `new` can throw an `std::bad_alloc` exception
+     */
+    array(const shape &s, const native_type fill);
+    array(shape &&s, const native_type fill);
+
     ~array() noexcept = default;
+
+    //////////////////////// COPY-MOVE SEMANTICS /////////////////////////
+
+    array(const array &copy);
+    array(array &&move) noexcept;
+    array &operator=(array rhs) noexcept;
+
+    ////////////////////////////// GENERAL ///////////////////////////////
+
+    // Sets every element in the array to `value`
+    void fill(const native_type value) noexcept;
+
+    // Swap state with existing array
+    void swap(array &b) noexcept;
+    // Swap state with temporary array
+    void swap(array &&b) noexcept;
 
   private:
 
@@ -43,8 +74,6 @@ namespace devi::core
 //////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////// IMPLEMENTATION /////////////////////////////////////
 
-#include <iostream>
-
 namespace devi::core
 {
   template<type _DType>
@@ -56,6 +85,59 @@ namespace devi::core
   array<_DType>::array(shape &&s)
     : p_data { new native_type[s.size()] {} }, m_shape { std::move(s) }
   { }
+
+  template<type _DType>
+  array<_DType>::array(const shape &s, const native_type fill) : array { s }
+  {
+    this->fill(fill);
+  }
+
+  template<type _DType>
+  array<_DType>::array(shape &&s, const native_type fill) : array { std::move(s) }
+  {
+    this->fill(fill);
+  }
+
+  //////////////////////// COPY-MOVE SEMANTICS /////////////////////////
+
+  template<type _DType>
+  array<_DType>::array(const array &copy) : array { copy.m_shape }
+  {
+    std::copy_n(copy.p_data.get(), m_shape.size(), p_data.get());
+  }
+
+  template<type _DType>
+  array<_DType>::array(array &&move) noexcept
+    : p_data { std::move(move.p_data) }, m_shape { std::move(move.m_shape) }
+  { }
+
+  template<type _DType>
+  array<_DType> &array<_DType>::operator=(array rhs) noexcept
+  {
+    this->swap(rhs);
+    return *this;
+  }
+
+  ////////////////////////////// GENERAL ///////////////////////////////
+
+  template<type _DType>
+  void array<_DType>::fill(const native_type value) noexcept
+  {
+    std::fill_n(p_data.get(), m_shape.size(), value);
+  }
+
+  template<type _DType>
+  void array<_DType>::swap(array &b) noexcept
+  {
+    std::swap(p_data, b.p_data);
+    std::swap(m_shape, b.m_shape);
+  }
+
+  template<type _DType>
+  void array<_DType>::swap(array &&b) noexcept
+  {
+    this->swap(b);
+  }
 }  // namespace devi::core
 
 #endif

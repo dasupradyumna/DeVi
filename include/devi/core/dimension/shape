@@ -62,6 +62,7 @@ namespace devi::core
 //////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////// IMPLEMENTATION /////////////////////////////////////
 
+#include <algorithm>
 #include <numeric>
 
 namespace devi::core
@@ -79,7 +80,7 @@ namespace devi::core
   shape::shape(const shape &copy)
     : p_data { new std::size_t[MAX_SIZE] }, m_size { copy.m_size }
   {
-    std::copy(copy.p_data.get(), copy.p_data.get() + m_size, p_data.get());
+    std::copy_n(copy.p_data.get(), m_size, p_data.get());
   }
 
   shape::shape(shape &&move) noexcept
