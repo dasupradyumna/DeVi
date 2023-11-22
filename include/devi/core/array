@@ -55,10 +55,13 @@ namespace devi::core
 
     ///////////////////////// OPERATOR OVERLOADS /////////////////////////
 
-    bool operator==(const array &other) const noexcept;
-    bool operator!=(const array &other) const noexcept;
-    native_type &operator[](const std::size_t flat_idx) noexcept;
-    native_type operator[](const std::size_t flat_idx) const noexcept;
+    // equality
+    [[nodiscard]] bool operator==(const array &other) const noexcept;
+    [[nodiscard]] bool operator!=(const array &other) const noexcept;
+
+    // flat-indexing
+    [[nodiscard]] native_type &operator[](const std::size_t flat_idx) noexcept;
+    [[nodiscard]] native_type operator[](const std::size_t flat_idx) const noexcept;
 
     ////////////////////////////// GETTERS ///////////////////////////////
 
@@ -67,25 +70,46 @@ namespace devi::core
      * Errors:
      * `std::out_of_range` is thrown if argument `idx` fails the bounds check
      * */
-    native_type &at(const std::size_t flat_idx);
-    native_type at(const std::size_t flat_idx) const;
+    [[nodiscard]] native_type &at(const std::size_t flat_idx);
+    [[nodiscard]] native_type at(const std::size_t flat_idx) const;
 
     // Returns the dimensionality of the array
-    unsigned ndims() const noexcept;
+    [[nodiscard]] unsigned ndims() const noexcept;
 
     // Returns the shape of the array
-    const core::shape &shape() const noexcept;
+    [[nodiscard]] const core::shape &shape() const noexcept;
 
     // Returns the total size of the array
-    std::size_t size() const noexcept;
+    [[nodiscard]] std::size_t size() const noexcept;
 
     // Returns the `devi::core::type` of the array
-    core::type type() const noexcept;
+    [[nodiscard]] core::type type() const noexcept;
 
-    ////////////////////////////// GENERAL ///////////////////////////////
+    ////////////////////////////// CREATION //////////////////////////////
 
-    // Sets every element in the array to `value`
-    void fill(const native_type value) noexcept;
+    // Returns a element-wise type-casted copy of the current array
+    template<core::type _AsType>
+    [[nodiscard]] array<_AsType> astype() const;
+
+    // Returns a copy of the current array
+    [[nodiscard]] array copy() const;
+
+    ////////////////////////////// MUTATION //////////////////////////////
+
+    // Sets every element in the array to `val`
+    void fill(const native_type val) noexcept;
+
+    // Flattens the current array to a single dimension
+    void flatten();
+
+    // Reshapes the current array
+    template<typename... _Args>
+    void reshape(const _Args... args);
+    void reshape(const core::shape &s);
+    void reshape(core::shape &&s) noexcept;
+
+    // Squeeze the array shape to remove all unit dimensions
+    void squeeze() noexcept;
 
     // Swap state with existing array
     void swap(array &b) noexcept;
@@ -96,6 +120,9 @@ namespace devi::core
 
     std::unique_ptr<native_type[]> p_data;
     core::shape m_shape;
+
+    template<core::type _Other>
+    friend class array;
   };
 
 }  // namespace devi::core
@@ -215,12 +242,64 @@ namespace devi::core
     return _DType;
   }
 
-  ////////////////////////////// GENERAL ///////////////////////////////
+  ////////////////////////////// CREATION //////////////////////////////
 
   template<type _DType>
-  void array<_DType>::fill(const native_type value) noexcept
+  template<type _AsType>
+  array<_AsType> array<_DType>::astype() const
   {
-    std::fill_n(p_data.get(), m_shape.size(), value);
+    array<_AsType> ret { m_shape };
+    std::transform(p_data.get(), p_data.get() + m_shape.size(), ret.p_data.get(),
+      [](const native_type val) {
+        return static_cast<typename core::native_type<_AsType>::type>(val);
+      });
+
+    return ret;
+  }
+
+  template<type _DType>
+  array<_DType> array<_DType>::copy() const
+  {
+    return array { *this };
+  }
+
+  ////////////////////////////// MUTATION //////////////////////////////
+
+  template<type _DType>
+  void array<_DType>::fill(const native_type val) noexcept
+  {
+    std::fill_n(p_data.get(), m_shape.size(), val);
+  }
+
+  template<type _DType>
+  void array<_DType>::flatten()
+  {
+    this->reshape(m_shape.size());
+  }
+
+  template<type _DType>
+  template<typename... _Args>
+  void array<_DType>::reshape(const _Args... args)
+  {
+    this->reshape(core::shape { args... });
+  }
+
+  template<type _DType>
+  void array<_DType>::reshape(const core::shape &s)
+  {
+    m_shape = s;
+  }
+
+  template<type _DType>
+  void array<_DType>::reshape(core::shape &&s) noexcept
+  {
+    m_shape = std::move(s);
+  }
+
+  template<type _DType>
+  void array<_DType>::squeeze() noexcept
+  {
+    m_shape.squeeze();
   }
 
   template<type _DType>

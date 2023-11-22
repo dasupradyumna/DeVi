@@ -48,11 +48,16 @@ unsigned copy_move()
 
 unsigned general()
 {
-  EXPECT_THROW(1, std::out_of_range, s1.at(10));
-  EXPECT_THROW(2, std::out_of_range, s2.at(5));
+  EXPECT_THROW(1, std::out_of_range, (void)s1.at(10));
+  EXPECT_THROW(2, std::out_of_range, (void)s2.at(5));
   ASSERT(3, s1.ndims() == 3 && s1.size() == 30);
   ASSERT(4, s2.ndims() == 2 && s2.size() == 0);
-  ASSERT(5, s1.str() == "( 3 10 1 )" && s2.str() == "( 5 0 )");
+
+  auto s { s1 };
+  s.squeeze();
+  ASSERT(5, s == shape(3, 10));
+
+  ASSERT(6, s1.str() == "( 3 10 1 )" && s2.str() == "( 5 0 )");
 
   TEST_SUCCESS;
 }

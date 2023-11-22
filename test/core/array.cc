@@ -48,11 +48,42 @@ unsigned copy_move()
 
 unsigned getters()
 {
-  EXPECT_THROW(1, std::out_of_range, a.at(5));
+  EXPECT_THROW(1, std::out_of_range, (void)a.at(5));
   ASSERT(2, a.ndims() == 2);
   ASSERT(3, a.shape() == shape(2, 2));
   ASSERT(4, a.size() == 4);
   ASSERT(5, a.type() == type::int32);
+
+  TEST_SUCCESS;
+}
+
+unsigned creation()
+{
+  auto a_f32t { a.astype<type::float32>() };
+  ASSERT(1, a_f32t.shape() == a.shape() && a_f32t.type() == type::float32
+              && a_f32t[0] == 0 && a_f32t[1] == 0 && a_f32t[2] == 0 && a_f32t[3] == 0);
+
+  auto a_ = a.copy();
+  ASSERT(2, a_ == a);
+
+  TEST_SUCCESS;
+}
+
+unsigned mutation()
+{
+  auto a_ { a };
+  shape s { 2, 1, 2 };
+
+  a_.flatten();
+  ASSERT(1, a_.shape() == shape(4) && a_.size() == 4);
+  a_.reshape(2, 1, 2);
+  ASSERT(2, a_.shape() == s && a_.size() == 4);
+  a_.reshape(s);
+  ASSERT(3, a_.shape() == s && a_.size() == 4);
+  a_.reshape(shape(2, 1, 2));
+  ASSERT(4, a_.shape() == s && a_.size() == 4);
+  a_.squeeze();
+  ASSERT(5, a_ == a);
 
   TEST_SUCCESS;
 }
@@ -65,6 +96,8 @@ int main()
   tester.run("Construction", construction);
   tester.run("Copy-Move", copy_move);
   tester.run("Getters", getters);
+  tester.run("Creation", creation);
+  tester.run("Mutation", mutation);
 
   return tester.passed() == tester.total() ? EXIT_SUCCESS : EXIT_FAILURE;
 }

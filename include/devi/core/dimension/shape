@@ -17,7 +17,7 @@ namespace devi::core
      */
     template<typename... _Args,
       typename = std::enable_if_t<(std::is_integral_v<_Args> && ...)>>
-    shape(_Args... args);
+    shape(const _Args... args);
 
     ~shape() noexcept = default;
 
@@ -29,9 +29,9 @@ namespace devi::core
 
     ///////////////////////// OPERATOR OVERLOADS /////////////////////////
 
-    bool operator==(const shape &other) const noexcept;
-    bool operator!=(const shape &other) const noexcept;
-    std::size_t operator[](const unsigned idx) const noexcept;
+    [[nodiscard]] bool operator==(const shape &other) const noexcept;
+    [[nodiscard]] bool operator!=(const shape &other) const noexcept;
+    [[nodiscard]] std::size_t operator[](const unsigned idx) const noexcept;
     friend std::ostream &operator<<(std::ostream &out, const shape &s);
 
     ////////////////////////////// GENERAL ///////////////////////////////
@@ -41,16 +41,19 @@ namespace devi::core
      * Errors:
      * `std::out_of_range` is thrown if argument `idx` fails the bounds check
      * */
-    std::size_t at(const unsigned idx) const;
+    [[nodiscard]] std::size_t at(const unsigned idx) const;
 
     // Returns the dimensionality of the current shape
-    unsigned ndims() const noexcept;
+    [[nodiscard]] unsigned ndims() const noexcept;
 
     // Returns the total size held by the current shape
-    std::size_t size() const noexcept;
+    [[nodiscard]] std::size_t size() const noexcept;
+
+    // Squeeze the current shape to remove all unit dimensions
+    void squeeze() noexcept;
 
     // Returns the string representation
-    std::string str() const;
+    [[nodiscard]] std::string str() const;
 
     // Swap state with existing shape
     void swap(shape &b) noexcept;
@@ -75,7 +78,8 @@ namespace devi::core
 namespace devi::core
 {
   template<typename... _Args, typename>
-  shape::shape(_Args... args) : p_data { new std::size_t[MAX_SIZE] {} }, m_size { 0 }
+  shape::shape(const _Args... args)
+    : p_data { new std::size_t[MAX_SIZE] {} }, m_size { 0 }
   {
     static_assert(sizeof...(args) > 0 && sizeof...(args) <= MAX_SIZE,
       "No. of arguments to devi::core::shape() must belong to [1, 10]");
@@ -128,6 +132,14 @@ namespace devi::core
   {
     return std::accumulate(
       p_data.get(), p_data.get() + m_size, 1UL, std::multiplies<std::size_t> {});
+  }
+
+  void shape::squeeze() noexcept
+  {
+    unsigned i { -1U }, j { 0 };
+    while (++i < m_size)
+      if (p_data[i] != 1) p_data[j++] = p_data[i];
+    m_size = j;
   }
 
   std::string shape::str() const
