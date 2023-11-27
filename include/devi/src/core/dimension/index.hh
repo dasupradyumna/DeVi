@@ -1,11 +1,13 @@
-#ifndef _DEVI_CORE_DIMENSION_INDEX_
-#define _DEVI_CORE_DIMENSION_INDEX_
+#ifndef _HEADER_GUARD__DEVI_SRC_CORE_DIMENSION_INDEX_HH_
+#define _HEADER_GUARD__DEVI_SRC_CORE_DIMENSION_INDEX_HH_
 
-#include "shape"
+#include "../__header_check__"
+#include "shape.hh"
 
-namespace devi::core
+namespace devi::core::internal
 {
-  class index : public internal::_base_ {
+  // Represents a multi-dimensional index into an array
+  class index : public _base_ {
   public:
 
     /* Constructs and returns an `index` from a variadic list of integer arguments
@@ -32,10 +34,10 @@ namespace devi::core
 //////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////// IMPLEMENTATION /////////////////////////////////////
 
-namespace devi::core
+namespace devi::core::internal
 {
   template<typename... _Args>
-  index::index(const _Args... args) : internal::_base_ { args... }
+  index::index(const _Args... args) : _base_ { args... }
   { }
 
   std::size_t index::flat(const shape &s) const

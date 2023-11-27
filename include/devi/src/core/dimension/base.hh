@@ -1,5 +1,7 @@
-#ifndef _DEVI_CORE_DIMENSION_BASE_
-#define _DEVI_CORE_DIMENSION_BASE_
+#ifndef _HEADER_GUARD__DEVI_SRC_CORE_DIMENSION_BASE_HH_
+#define _HEADER_GUARD__DEVI_SRC_CORE_DIMENSION_BASE_HH_
+
+#include "../__header_check__"
 
 #include <memory>
 

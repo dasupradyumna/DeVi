@@ -1,0 +1,5 @@
+#ifndef _HEADER_GUARD__DEVI_CORE_MODULE_
+#error "Please include `devi/core` for core functionality; \
+Do not include any headers from `devi/src/core` directory"
+#endif
+// vim: ft=cpp

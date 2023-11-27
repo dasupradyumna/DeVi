@@ -1,9 +1,9 @@
 #include "../utils.hh"
 
-#include <devi/core/dimension/index>
-#include <devi/core/dimension/shape>
+#define _HEADER_GUARD__DEVI_CORE_MODULE_  // to bypass the internal header check
+#include <devi/src/core/dimension/index.hh>
 
-using namespace devi::core;
+using namespace devi::core::internal;
 
 static const index i { 3, 5 };
 static const shape s1 { 10, 8 }, s2 { 2, 6 };

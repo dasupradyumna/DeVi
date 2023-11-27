@@ -1,10 +1,11 @@
-#ifndef _DEVI_CORE_ARRAY_
-#define _DEVI_CORE_ARRAY_
+#ifndef _HEADER_GUARD__DEVI_SRC_CORE_ARRAY_HH_
+#define _HEADER_GUARD__DEVI_SRC_CORE_ARRAY_HH_
 
-#include "dimension/shape"
-#include "types"
+#include "__header_check__"
+#include "dimension/shape.hh"
+#include "types.hh"
 
-namespace devi::core
+namespace devi::core::internal
 {
   template<type _DType>
   class array;
@@ -33,8 +34,8 @@ namespace devi::core
      * Errors:
      * `new` can throw an `std::bad_alloc` exception
      */
-    array(const core::shape &s);
-    array(core::shape &&s);
+    array(const class shape &s);
+    array(class shape &&s);
 
     /* Constructs an `array` with every element equal to `fill` and its shape specified by
      * the argument `s`
@@ -42,8 +43,8 @@ namespace devi::core
      * Errors:
      * `new` can throw an `std::bad_alloc` exception
      */
-    array(const core::shape &s, const native_type fill);
-    array(core::shape &&s, const native_type fill);
+    array(const class shape &s, const native_type fill);
+    array(class shape &&s, const native_type fill);
 
     ~array() noexcept = default;
 
@@ -83,18 +84,18 @@ namespace devi::core
     [[nodiscard]] unsigned ndims() const noexcept;
 
     // Returns the shape of the array
-    [[nodiscard]] const core::shape &shape() const noexcept;
+    [[nodiscard]] const class shape &shape() const noexcept;
 
     // Returns the total size of the array
     [[nodiscard]] std::size_t size() const noexcept;
 
     // Returns the `devi::core::type` of the array
-    [[nodiscard]] core::type type() const noexcept;
+    [[nodiscard]] enum type type() const noexcept;
 
     ////////////////////////////// CREATION //////////////////////////////
 
     // Returns a element-wise type-casted copy of the current array
-    template<core::type _AsType>
+    template<enum type _AsType>
     [[nodiscard]] array<_AsType> astype() const;
 
     // Returns a copy of the current array
@@ -111,8 +112,8 @@ namespace devi::core
     // Reshapes the current array
     template<typename... _Args>
     void reshape(const _Args... args);
-    void reshape(const core::shape &s);
-    void reshape(core::shape &&s) noexcept;
+    void reshape(const class shape &s);
+    void reshape(class shape &&s) noexcept;
 
     // Squeeze the array shape to remove all unit dimensions
     void squeeze() noexcept;
@@ -125,9 +126,9 @@ namespace devi::core
   private:
 
     std::unique_ptr<native_type[]> p_data;
-    core::shape m_shape;
+    class shape m_shape;
 
-    template<core::type _Other>
+    template<enum type _Other>
     friend class array;
 
   };  // class array
@@ -137,28 +138,28 @@ namespace devi::core
 //////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////// IMPLEMENTATION /////////////////////////////////////
 
-#include "dimension/index"
+#include "dimension/index.hh"
 
-namespace devi::core
+namespace devi::core::internal
 {
   template<type _DType>
-  array<_DType>::array(const core::shape &s)
+  array<_DType>::array(const class shape &s)
     : p_data { new native_type[s.size()] {} }, m_shape { s }
   { }
 
   template<type _DType>
-  array<_DType>::array(core::shape &&s)
+  array<_DType>::array(class shape &&s)
     : p_data { new native_type[s.size()] {} }, m_shape { std::move(s) }
   { }
 
   template<type _DType>
-  array<_DType>::array(const core::shape &s, const native_type fill) : array { s }
+  array<_DType>::array(const class shape &s, const native_type fill) : array { s }
   {
     this->fill(fill);
   }
 
   template<type _DType>
-  array<_DType>::array(core::shape &&s, const native_type fill) : array { std::move(s) }
+  array<_DType>::array(class shape &&s, const native_type fill) : array { std::move(s) }
   {
     this->fill(fill);
   }
@@ -278,7 +279,7 @@ namespace devi::core
     array<_AsType> ret { m_shape };
     std::transform(p_data.get(), p_data.get() + m_shape.size(), ret.p_data.get(),
       [](const native_type val) {
-        return static_cast<typename core::native_type<_AsType>::type>(val);
+        return static_cast<typename core::internal::native_type<_AsType>::type>(val);
       });
 
     return ret;
@@ -308,17 +309,17 @@ namespace devi::core
   template<typename... _Args>
   void array<_DType>::reshape(const _Args... args)
   {
-    this->reshape(core::shape { args... });
+    this->reshape({ args... });
   }
 
   template<type _DType>
-  void array<_DType>::reshape(const core::shape &s)
+  void array<_DType>::reshape(const class shape &s)
   {
     m_shape = s;
   }
 
   template<type _DType>
-  void array<_DType>::reshape(core::shape &&s) noexcept
+  void array<_DType>::reshape(class shape &&s) noexcept
   {
     m_shape = std::move(s);
   }
@@ -345,4 +346,3 @@ namespace devi::core
 }  // namespace devi::core
 
 #endif
-// vim: ft=cpp

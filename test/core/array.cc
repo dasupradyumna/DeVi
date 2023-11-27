@@ -1,6 +1,6 @@
 #include "../utils.hh"
 
-#include <devi/core/array>
+#include <devi/core>
 
 using namespace devi::core;
 

@@ -1,12 +1,13 @@
-#ifndef _DEVI_CORE_DIMENSION_SHAPE_
-#define _DEVI_CORE_DIMENSION_SHAPE_
+#ifndef _HEADER_GUARD__DEVI_SRC_CORE_DIMENSION_SHAPE_HH_
+#define _HEADER_GUARD__DEVI_SRC_CORE_DIMENSION_SHAPE_HH_
 
-#include "base"
+#include "../__header_check__"
+#include "base.hh"
 
-namespace devi::core
+namespace devi::core::internal
 {
   // Represents the shape of an array and its dimensionality
-  class shape : public internal::_base_ {
+  class shape : public _base_ {
   public:
 
     /* Constructs and returns a `shape` from a variadic list of integer arguments
@@ -63,17 +64,17 @@ namespace devi::core
 
 #include <numeric>
 
-namespace devi::core
+namespace devi::core::internal
 {
   template<typename... _Args>
-  shape::shape(const _Args... args) : internal::_base_ { args... }
+  shape::shape(const _Args... args) : _base_ { args... }
   { }
 
   //////////////////////// COPY-MOVE SEMANTICS /////////////////////////
 
-  shape::shape(const shape &copy) : internal::_base_ { copy } { }
+  shape::shape(const shape &copy) : _base_ { copy } { }
 
-  shape::shape(shape &&move) noexcept : internal::_base_ { std::move(move) } { }
+  shape::shape(shape &&move) noexcept : _base_ { std::move(move) } { }
 
   shape &shape::operator=(shape rhs) noexcept
   {

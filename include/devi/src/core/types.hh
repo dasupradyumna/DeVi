@@ -1,5 +1,7 @@
-#ifndef DEVI_CORE_TYPES
-#define DEVI_CORE_TYPES
+#ifndef _HEADER_GUARD__DEVI_SRC_CORE_TYPES_HH_
+#define _HEADER_GUARD__DEVI_SRC_CORE_TYPES_HH_
+
+#include "__header_check__"
 
 #include <climits>
 #include <cstdint>
@@ -9,7 +11,7 @@
 static_assert(CHAR_BIT * sizeof(float) == 32, "'float' type should be 32 bits\n");
 static_assert(CHAR_BIT * sizeof(double) == 64, "'double' type should be 64 bits\n");
 
-namespace devi::core
+namespace devi::core::internal
 {
   enum class type {
     // boolean
@@ -29,7 +31,6 @@ namespace devi::core
     float64
   };
 
-  // FIX: hide this from end users somehow (hidden attribute or implementation?)
   template<type _Type>
   struct native_type;
 
@@ -54,4 +55,3 @@ namespace devi::core
 }  // namespace devi::core
 
 #endif
-// vim: ft=cpp

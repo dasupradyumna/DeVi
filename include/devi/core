@@ -1,0 +1,20 @@
+#ifndef _HEADER_GUARD__DEVI_CORE_MODULE_
+#define _HEADER_GUARD__DEVI_CORE_MODULE_
+
+#include "src/core/array.hh"
+
+namespace devi::core
+{
+  using internal::array;
+  using internal::bool8;
+  using internal::float32, internal::float64;
+  using internal::int8, internal::int16, internal::int32, internal::int64;
+  using internal::uint8, internal::uint16, internal::uint32, internal::uint64;
+
+  using internal::shape;
+  using internal::type;
+
+}  // namespace devi::core
+
+#endif
+// vim: ft=cpp

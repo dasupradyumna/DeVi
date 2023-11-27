@@ -1,6 +1,6 @@
 #include "../utils.hh"
 
-#include <devi/core/dimension/shape>
+#include <devi/core>
 
 using devi::core::shape;
 
