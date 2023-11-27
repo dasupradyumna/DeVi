@@ -1,5 +1,5 @@
-#ifndef DEVI_CORE_ARRAY
-#define DEVI_CORE_ARRAY
+#ifndef _DEVI_CORE_ARRAY_
+#define _DEVI_CORE_ARRAY_
 
 #include "dimension/shape"
 #include "types"
@@ -63,6 +63,12 @@ namespace devi::core
     [[nodiscard]] native_type &operator[](const std::size_t flat_idx) noexcept;
     [[nodiscard]] native_type operator[](const std::size_t flat_idx) const noexcept;
 
+    // multi-dimensional full-indexing
+    template<typename... _Args>
+    [[nodiscard]] native_type &operator()(const _Args... args);
+    template<typename... _Args>
+    [[nodiscard]] native_type operator()(const _Args... args) const;
+
     ////////////////////////////// GETTERS ///////////////////////////////
 
     /* Return the value of array element at given index
@@ -123,12 +129,15 @@ namespace devi::core
 
     template<core::type _Other>
     friend class array;
-  };
+
+  };  // class array
 
 }  // namespace devi::core
 
 //////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////// IMPLEMENTATION /////////////////////////////////////
+
+#include "dimension/index"
 
 namespace devi::core
 {
@@ -203,12 +212,30 @@ namespace devi::core
     return const_cast<array &>(*this)[flat_idx];
   }
 
+  template<type _DType>
+  template<typename... _Args>
+  typename array<_DType>::native_type &array<_DType>::operator()(const _Args... args)
+  {
+    if (sizeof...(args) != m_shape.ndims())
+      throw std::out_of_range { "index must have same dimensionality as array shape" };
+
+    return p_data[index { args... }.flat(m_shape)];
+  }
+
+  template<type _DType>
+  template<typename... _Args>
+  typename array<_DType>::native_type array<_DType>::operator()(const _Args... args) const
+  {
+    return const_cast<array &>(*this)(args...);
+  }
+
   ////////////////////////////// GETTERS ///////////////////////////////
 
   template<type _DType>
   typename array<_DType>::native_type &array<_DType>::at(const std::size_t flat_idx)
   {
     if (flat_idx >= m_shape.size()) throw std::out_of_range { "index out of bounds" };
+
     return (*this)[flat_idx];
   }
 
@@ -314,6 +341,7 @@ namespace devi::core
   {
     this->swap(b);
   }
+
 }  // namespace devi::core
 
 #endif

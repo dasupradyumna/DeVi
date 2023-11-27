@@ -11,11 +11,15 @@ unsigned operators()
   // indexing
   ASSERT(1, a[0] == 0 && a[1] == 0 && a[2] == 0 && a[3] == 0);
   int32 a_ { shape(2, 2) };
-  a_[1] = a_[3] = 1;
+  a_(0, 1) = 1;
+  a_[3]    = 3;
+  ASSERT(2, a_[1] == 1 && a_(1, 1) == 3);
+  EXPECT_THROW(3, std::out_of_range, (void)a_(2, 0));
+  EXPECT_THROW(4, std::out_of_range, (void)a_(1, 1, 0));
 
   // equality
-  ASSERT(2, CODE(a != int32 { shape(4, 1) }));
-  ASSERT(3, a == a && a != a_ && a_ == a_);
+  ASSERT(5, CODE(a != int32 { shape(4, 1) }));
+  ASSERT(6, a == a && a != a_ && a_ == a_);
 
   TEST_SUCCESS;
 }

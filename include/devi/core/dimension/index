@@ -1,0 +1,68 @@
+#ifndef _DEVI_CORE_DIMENSION_INDEX_
+#define _DEVI_CORE_DIMENSION_INDEX_
+
+#include "shape"
+
+namespace devi::core
+{
+  class index : public internal::_base_ {
+  public:
+
+    /* Constructs and returns an `index` from a variadic list of integer arguments
+     *
+     * Errors:
+     * 1) `new` can throw an `std::bad_alloc` exception
+     * 2) compile-time error if the argument list has more than 10 integers
+     */
+    template<typename... _Args>
+    index(const _Args... args);
+
+    // Returns a flat offset obtained by converting current index using the argument shape
+    [[nodiscard]] std::size_t flat(const shape &s) const;
+
+  private:
+
+    // Checks if current index is invalid for the argument shape
+    [[nodiscard]] bool is_invalid(const shape &s) const;
+
+  };  // class index
+
+}  // namespace devi::core
+
+//////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////// IMPLEMENTATION /////////////////////////////////////
+
+namespace devi::core
+{
+  template<typename... _Args>
+  index::index(const _Args... args) : internal::_base_ { args... }
+  { }
+
+  std::size_t index::flat(const shape &s) const
+  {
+    if (this->is_invalid(s))
+      throw std::out_of_range { "index out of bounds for given shape" };
+
+    std::size_t stride { 1 }, flat { p_data[m_size - 1] };
+    for (auto i { m_size }; --i;) {
+      stride *= s[i];
+      flat += stride * p_data[i - 1];
+    }
+
+    return flat;
+  }
+
+  bool index::is_invalid(const shape &s) const
+  {
+    if (m_size != s.ndims())
+      throw std::invalid_argument { "index is incompatible with given shape" };
+
+    for (unsigned i { -1U }; ++i < m_size;)
+      if (p_data[i] >= s[i]) return true;
+    return false;
+  }
+
+}  // namespace devi::core
+
+#endif
+// vim: ft=cpp

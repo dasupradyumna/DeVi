@@ -21,6 +21,8 @@ endfunction()
 build_test(test_shape core/shape.cc)
 # 2) devi::core::array
 build_test(test_array core/array.cc)
+# 3) devi::core::index
+build_test(test_index core/index.cc)
 
 # compile commands
 if(CMAKE_EXPORT_COMPILE_COMMANDS)
