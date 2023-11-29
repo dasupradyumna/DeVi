@@ -1,8 +1,9 @@
 #include "../utils.hh"
 
-#include <devi/core>
+#define _HEADER_GUARD__DEVI_CORE_MODULE_  // to bypass the internal header check
+#include <devi/src/core/dimension/shape.hh>
 
-using devi::core::shape;
+using devi::core::internal::shape;
 
 static const shape s1 { 3, 10, 1 }, s2 { 5, 0 };
 
@@ -64,7 +65,7 @@ unsigned general()
 
 int main()
 {
-  UnitTestRunner tester { "core/dimension/shape", "devi::core::shape" };
+  UnitTestRunner tester { "src/core/dimension/shape.hh", "devi::core::shape" };
 
   tester.run("Operators", operators);
   tester.run("Construction", construction);

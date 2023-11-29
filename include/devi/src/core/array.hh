@@ -2,32 +2,17 @@
 #define _HEADER_GUARD__DEVI_SRC_CORE_ARRAY_HH_
 
 #include "__header_check__"
-#include "dimension/shape.hh"
-#include "types.hh"
+#include "view.hh"
 
 namespace devi::core::internal
 {
-  template<type _DType>
-  class array;
-
-  // array type aliases
-  using bool8   = array<type::bool8>;
-  using int8    = array<type::int8>;
-  using int16   = array<type::int16>;
-  using int32   = array<type::int32>;
-  using int64   = array<type::int64>;
-  using uint8   = array<type::uint8>;
-  using uint16  = array<type::uint16>;
-  using uint32  = array<type::uint32>;
-  using uint64  = array<type::uint64>;
-  using float32 = array<type::float32>;
-  using float64 = array<type::float64>;
-
+  // Data-owning multi-dimensional array class
   template<type _DType>
   class array {
     using native_type = typename native_type<_DType>::type;
 
   public:
+    //////////////////////////// CONSTRUCTORS ////////////////////////////
 
     /* Constructs a zero-initialized `array` with its shape specified by the argument `s`
      *
@@ -46,39 +31,55 @@ namespace devi::core::internal
     array(const class shape &s, const native_type fill);
     array(class shape &&s, const native_type fill);
 
+    // Default destructor
     ~array() noexcept = default;
 
     //////////////////////// COPY-MOVE SEMANTICS /////////////////////////
 
+    // Copy constructor
     array(const array &copy);
+
+    // Move constructor
     array(array &&move) noexcept;
+
+    // Copy-and-Swap idiom for assignment operator
     array &operator=(array rhs) noexcept;
 
     ///////////////////////// OPERATOR OVERLOADS /////////////////////////
 
-    // equality
+    // Equality operator overload
     [[nodiscard]] bool operator==(const array &other) const noexcept;
+
+    // Inequality operator overload
     [[nodiscard]] bool operator!=(const array &other) const noexcept;
 
-    // flat-indexing
-    [[nodiscard]] native_type &operator[](const std::size_t flat_idx) noexcept;
-    [[nodiscard]] native_type operator[](const std::size_t flat_idx) const noexcept;
+    // Flat indexing into owned data
+    [[nodiscard]] native_type &operator[](const std::size_t i) noexcept;
+    [[nodiscard]] native_type operator[](const std::size_t i) const noexcept;
 
-    // multi-dimensional full-indexing
-    template<typename... _Args>
-    [[nodiscard]] native_type &operator()(const _Args... args);
-    template<typename... _Args>
-    [[nodiscard]] native_type operator()(const _Args... args) const;
+    // Multi-dimensional full indexing using integers
+    template<typename... _Indices,
+      typename = std::enable_if_t<(std::is_integral_v<_Indices> && ...)>>
+    [[nodiscard]] native_type &operator()(const _Indices... indices);
+    template<typename... _Indices,
+      typename = std::enable_if_t<(std::is_integral_v<_Indices> && ...)>>
+    [[nodiscard]] native_type operator()(const _Indices... indices) const;
 
+    // Multi-dimensional partial indexing using integers and slices
+    template<typename... _Slices, typename = std::enable_if_t<is_valid_slice<_Slices...>>>
+    [[nodiscard]] view<_DType> operator()(const _Slices &...slices);
+    // TODO: implement `const_view` class for a non-mutable window into memory
+
+  public:
     ////////////////////////////// GETTERS ///////////////////////////////
 
-    /* Return the value of array element at given index
+    /* Return the element value at given flat index
      *
      * Errors:
-     * `std::out_of_range` is thrown if argument `idx` fails the bounds check
+     * `std::out_of_range` is thrown if argument `i` fails the bounds check
      * */
-    [[nodiscard]] native_type &at(const std::size_t flat_idx);
-    [[nodiscard]] native_type at(const std::size_t flat_idx) const;
+    [[nodiscard]] native_type &at(const std::size_t i);
+    [[nodiscard]] native_type at(const std::size_t i) const;
 
     // Returns the dimensionality of the array
     [[nodiscard]] unsigned ndims() const noexcept;
@@ -101,6 +102,7 @@ namespace devi::core::internal
     // Returns a copy of the current array
     [[nodiscard]] array copy() const;
 
+  public:
     ////////////////////////////// MUTATION //////////////////////////////
 
     // Sets every element in the array to `val`
@@ -124,16 +126,35 @@ namespace devi::core::internal
     void swap(array &&b) noexcept;
 
   private:
+    ///////////////////////////// ATTRIBUTES /////////////////////////////
 
     std::unique_ptr<native_type[]> p_data;
     class shape m_shape;
 
+    ////////////////////////////// FRIENDS ///////////////////////////////
+
     template<enum type _Other>
-    friend class array;
+    friend class array;  // for accessing private members of arrays of all other types
+
+    friend class view<_DType>;
 
   };  // class array
 
-}  // namespace devi::core
+  // type aliases for `array`
+  // TODO: move this into `devi/core` and make it a union of array and view
+  using bool8   = array<type::bool8>;
+  using int8    = array<type::int8>;
+  using int16   = array<type::int16>;
+  using int32   = array<type::int32>;
+  using int64   = array<type::int64>;
+  using uint8   = array<type::uint8>;
+  using uint16  = array<type::uint16>;
+  using uint32  = array<type::uint32>;
+  using uint64  = array<type::uint64>;
+  using float32 = array<type::float32>;
+  using float64 = array<type::float64>;
+
+}  // namespace devi::core::internal
 
 //////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////// IMPLEMENTATION /////////////////////////////////////
@@ -142,6 +163,8 @@ namespace devi::core::internal
 
 namespace devi::core::internal
 {
+  //////////////////////////// CONSTRUCTORS ////////////////////////////
+
   template<type _DType>
   array<_DType>::array(const class shape &s)
     : p_data { new native_type[s.size()] {} }, m_shape { s }
@@ -201,49 +224,105 @@ namespace devi::core::internal
 
   template<type _DType>
   typename array<_DType>::native_type &array<_DType>::operator[](
-    const std::size_t flat_idx) noexcept
+    const std::size_t i) noexcept
   {
-    return p_data[flat_idx];
+    return p_data[i];
   }
 
   template<type _DType>
   typename array<_DType>::native_type array<_DType>::operator[](
-    const std::size_t flat_idx) const noexcept
+    const std::size_t i) const noexcept
   {
-    return const_cast<array &>(*this)[flat_idx];
+    return const_cast<array &>(*this)[i];
   }
 
   template<type _DType>
-  template<typename... _Args>
-  typename array<_DType>::native_type &array<_DType>::operator()(const _Args... args)
+  template<typename... _Indices, typename>
+  typename array<_DType>::native_type &array<_DType>::operator()(
+    const _Indices... indices)
   {
-    if (sizeof...(args) != m_shape.ndims())
-      throw std::out_of_range { "index must have same dimensionality as array shape" };
+    if (sizeof...(indices) != m_shape.ndims())
+      throw std::invalid_argument {
+        "Index must have same dimensionality as array shape"
+      };
 
-    return p_data[index { args... }.flat(m_shape)];
+    return p_data[index(indices...).flat(m_shape)];
   }
 
   template<type _DType>
-  template<typename... _Args>
-  typename array<_DType>::native_type array<_DType>::operator()(const _Args... args) const
+  template<typename... _Indices, typename>
+  typename array<_DType>::native_type array<_DType>::operator()(
+    const _Indices... indices) const
   {
-    return const_cast<array &>(*this)(args...);
+    return const_cast<array &>(*this)(indices...);
+  }
+
+  namespace  // for internal linkage
+  {
+    inline void _slice_extractor(
+      const slice &s, slice_data &starts, slice_data &ends, slice_data &strides)
+    {
+      // TODO: implement default values
+      starts.append(s.m_start);
+      ends.append(s.m_end);
+      strides.append(s.m_stride);
+    }
+
+    inline void _slice_extractor(
+      const std::size_t i, slice_data &starts, slice_data &ends, slice_data &strides)
+    {
+      starts.append(i);
+      ends.append(0);
+      strides.append(0);
+    }
+  }
+
+  template<type _DType>
+  template<typename... _Slices, typename>
+  view<_DType> array<_DType>::operator()(const _Slices &...slices)
+  {
+    if (sizeof...(slices) > m_shape.ndims())
+      throw std::invalid_argument {
+        "Slice must have atmost the same dimensionality as array shape"
+      };
+
+    // FIX: do slice and index bounds checking before calculation
+
+    auto shape_stride { slice_data::get_stride(m_shape) };
+    slice_data starts {}, ends {}, strides {};
+    (_slice_extractor(slices, starts, ends, strides), ...);
+
+    // TODO: move this into `view` constructor?
+    std::size_t start { 0 };
+    for (auto i { -1U }; ++i < m_shape.ndims();) {
+      start += shape_stride[i] * starts[i];
+      if (strides[i]) {
+        ends[i] -= starts[i];
+        ends[i] = ends[i] / strides[i] + (ends[i] % strides[i] > 0);
+        strides[i] *= shape_stride[i];
+      }
+    }
+
+    strides.remove_zeros();
+    ends.remove_zeros();
+
+    return view<_DType> { p_data.get(), ends.make_shape(), start, strides };
   }
 
   ////////////////////////////// GETTERS ///////////////////////////////
 
   template<type _DType>
-  typename array<_DType>::native_type &array<_DType>::at(const std::size_t flat_idx)
+  typename array<_DType>::native_type &array<_DType>::at(const std::size_t i)
   {
-    if (flat_idx >= m_shape.size()) throw std::out_of_range { "index out of bounds" };
+    if (i >= m_shape.size()) throw std::out_of_range { "Flat index out of bounds" };
 
-    return (*this)[flat_idx];
+    return (*this)[i];
   }
 
   template<type _DType>
-  typename array<_DType>::native_type array<_DType>::at(const std::size_t flat_idx) const
+  typename array<_DType>::native_type array<_DType>::at(const std::size_t i) const
   {
-    return const_cast<array *>(this)->at(flat_idx);
+    return const_cast<array &>(*this).at(i);
   }
 
   template<type _DType>
@@ -278,8 +357,8 @@ namespace devi::core::internal
   {
     array<_AsType> ret { m_shape };
     std::transform(p_data.get(), p_data.get() + m_shape.size(), ret.p_data.get(),
-      [](const native_type val) {
-        return static_cast<typename core::internal::native_type<_AsType>::type>(val);
+      [](const native_type value) {
+        return static_cast<typename core::internal::native_type<_AsType>::type>(value);
       });
 
     return ret;
@@ -309,7 +388,7 @@ namespace devi::core::internal
   template<typename... _Args>
   void array<_DType>::reshape(const _Args... args)
   {
-    this->reshape({ args... });
+    this->reshape(core::internal::shape { args... });
   }
 
   template<type _DType>
@@ -343,6 +422,6 @@ namespace devi::core::internal
     this->swap(b);
   }
 
-}  // namespace devi::core
+}  // namespace devi::core::internal
 
 #endif

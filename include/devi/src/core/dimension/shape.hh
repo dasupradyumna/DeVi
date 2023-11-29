@@ -7,8 +7,9 @@
 namespace devi::core::internal
 {
   // Represents the shape of an array and its dimensionality
-  class shape : public _base_ {
+  class shape : public base_dimension {
   public:
+    //////////////////////////// CONSTRUCTORS ////////////////////////////
 
     /* Constructs and returns a `shape` from a variadic list of integer arguments
      *
@@ -19,45 +20,53 @@ namespace devi::core::internal
     template<typename... _Args>
     shape(const _Args... args);
 
-    ~shape() noexcept = default;
-
     //////////////////////// COPY-MOVE SEMANTICS /////////////////////////
 
+    // Copy constructor
     shape(const shape &copy);
+
+    // Move constructor
     shape(shape &&move) noexcept;
+
+    // Copy-and-Swap idiom for assignment operator
     shape &operator=(shape rhs) noexcept;
 
     ///////////////////////// OPERATOR OVERLOADS /////////////////////////
 
-    [[nodiscard]] bool operator==(const shape &other) const noexcept;
-    [[nodiscard]] bool operator!=(const shape &other) const noexcept;
+    // Inherited equality and inequality operators
+    using base_dimension::operator==;
+    using base_dimension::operator!=;
+
+    // Returns value at specified index
     [[nodiscard]] std::size_t operator[](const unsigned idx) const noexcept;
+
+    // Overloading `std::ostream` for easy printing via `std::cout`
     friend std::ostream &operator<<(std::ostream &out, const shape &s);
 
     ////////////////////////////// GENERAL ///////////////////////////////
 
-    /* Return the dimension value at given index
+    /* Return the dimension value at given flat index
      *
      * Errors:
-     * `std::out_of_range` is thrown if argument `idx` fails the bounds check
+     * `std::out_of_range` is thrown if argument `i` fails the bounds check
      * */
-    [[nodiscard]] std::size_t at(const unsigned idx) const;
+    [[nodiscard]] std::size_t at(const unsigned i) const;
 
-    // Returns the dimensionality of the current shape
+    // Returns the dimensionality of current shape
     [[nodiscard]] unsigned ndims() const noexcept;
 
-    // Returns the total size held by the current shape
+    // Returns the total size held by current shape
     [[nodiscard]] std::size_t size() const noexcept;
 
-    // Squeeze the current shape to remove all unit dimensions
+    // Squeeze current shape to remove all unit dimensions
     void squeeze() noexcept;
 
-    // Returns the string representation
+    // Returns the string representation of current shape
     [[nodiscard]] std::string str() const;
 
   };  // class shape
 
-}  // namespace devi::core
+}  // namespace devi::core::internal
 
 //////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////// IMPLEMENTATION /////////////////////////////////////
@@ -66,17 +75,19 @@ namespace devi::core::internal
 
 namespace devi::core::internal
 {
+  //////////////////////////// CONSTRUCTORS ////////////////////////////
+
   template<typename... _Args>
-  shape::shape(const _Args... args) : _base_ { args... }
+  shape::shape(const _Args... args) : base_dimension { args... }
   { }
 
   //////////////////////// COPY-MOVE SEMANTICS /////////////////////////
 
-  shape::shape(const shape &copy) : _base_ { copy } { }
+  inline shape::shape(const shape &copy) : base_dimension { copy } { }
 
-  shape::shape(shape &&move) noexcept : _base_ { std::move(move) } { }
+  inline shape::shape(shape &&move) noexcept : base_dimension { std::move(move) } { }
 
-  shape &shape::operator=(shape rhs) noexcept
+  inline shape &shape::operator=(shape rhs) noexcept
   {
     this->swap(rhs);
     return *this;
@@ -84,36 +95,34 @@ namespace devi::core::internal
 
   ///////////////////////// OPERATOR OVERLOADS /////////////////////////
 
-  bool shape::operator==(const shape &other) const noexcept
+  inline std::size_t shape::operator[](const unsigned idx) const noexcept
   {
-    return m_size == other.m_size
-        && std::equal(p_data.get(), p_data.get() + m_size, other.p_data.get());
+    return p_data[idx];
   }
 
-  bool shape::operator!=(const shape &other) const noexcept { return !(*this == other); }
-
-  std::size_t shape::operator[](const unsigned idx) const noexcept { return p_data[idx]; }
-
-  std::ostream &operator<<(std::ostream &out, const shape &s) { return out << s.str(); }
+  inline std::ostream &operator<<(std::ostream &out, const shape &s)
+  {
+    return out << s.str();
+  }
 
   ////////////////////////////// GENERAL ///////////////////////////////
 
-  std::size_t shape::at(const unsigned idx) const
+  inline std::size_t shape::at(const unsigned i) const
   {
-    if (idx >= m_size) throw std::out_of_range { "index out of bounds" };
+    if (i >= m_size) throw std::out_of_range { "Flat index out of bounds" };
 
-    return (*this)[idx];
+    return (*this)[i];
   }
 
-  unsigned shape::ndims() const noexcept { return m_size; }
+  inline unsigned shape::ndims() const noexcept { return m_size; }
 
-  std::size_t shape::size() const noexcept
+  inline std::size_t shape::size() const noexcept
   {
     return std::accumulate(
       p_data.get(), p_data.get() + m_size, 1UL, std::multiplies<std::size_t> {});
   }
 
-  void shape::squeeze() noexcept
+  inline void shape::squeeze() noexcept
   {
     unsigned i { -1U }, j { 0 };
     while (++i < m_size)
@@ -121,14 +130,13 @@ namespace devi::core::internal
     m_size = j;
   }
 
-  std::string shape::str() const
+  inline std::string shape::str() const
   {
     using namespace std;
     static constexpr auto join = [](auto &a, auto b) { return a + ' ' + to_string(b); };
     return accumulate(p_data.get(), p_data.get() + m_size, string { '(' }, join) + " )";
   }
 
-}  // namespace devi::core
+}  // namespace devi::core::internal
 
 #endif
-// vim: ft=cpp

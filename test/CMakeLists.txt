@@ -19,10 +19,10 @@ endfunction()
 
 # 1) devi::core::shape
 build_test(test_shape core/shape.cc)
-# 2) devi::core::array
-build_test(test_array core/array.cc)
-# 3) devi::core::index
+# 2) devi::core::index
 build_test(test_index core/index.cc)
+# 3) devi::core::array
+build_test(test_array core/array.cc)
 
 # compile commands
 if(CMAKE_EXPORT_COMPILE_COMMANDS)

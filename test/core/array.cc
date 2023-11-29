@@ -8,18 +8,31 @@ static const int32 a { shape(2, 2) };
 
 unsigned operators()
 {
-  // indexing
+  // flat indexing
   ASSERT(1, a[0] == 0 && a[1] == 0 && a[2] == 0 && a[3] == 0);
-  int32 a_ { shape(2, 2) };
-  a_(0, 1) = 1;
-  a_[3]    = 3;
-  ASSERT(2, a_[1] == 1 && a_(1, 1) == 3);
-  EXPECT_THROW(3, std::out_of_range, (void)a_(2, 0));
-  EXPECT_THROW(4, std::out_of_range, (void)a_(1, 1, 0));
+
+  // multi-dimensional indexing
+  int32 a1 { shape(2, 2) };
+  a1(0, 1) = 1;
+  a1[3]    = 3;
+  ASSERT(2, a1[1] == 1 && a1(1, 1) == 3);
+  EXPECT_THROW(3, std::out_of_range, (void)a1(2, 0));
+  EXPECT_THROW(4, std::invalid_argument, (void)a1(1, 1, 0));
+
+  // multi-dimensional slicing
+  using s = slice;
+  int64 a2 { shape(5, 8, 6), 1 };
+  EXPECT_THROW(5, std::invalid_argument, (void)a2(s(0, 5, 2), s(3, 6), 3, 4));
+  view<type::int64> v { a2(s(0, 5, 2), s(3, 6), 3) };
+  ASSERT(6, v.ndims() == 2 && v.shape() == shape(3, 3) && v.size() == 9
+              && v.type() == type::int64);
+  v(0, 0) = 2;
+  v(2, 1) = 3;
+  ASSERT(7, a2(0, 3, 3) == 2 && a2(4, 4, 3) == 3);
 
   // equality
-  ASSERT(5, CODE(a != int32 { shape(4, 1) }));
-  ASSERT(6, a == a && a != a_ && a_ == a_);
+  ASSERT(8, CODE(a != int32 { shape(4, 1) }));
+  ASSERT(9, a == a && a != a1 && a1 == a1);
 
   TEST_SUCCESS;
 }
@@ -52,11 +65,12 @@ unsigned copy_move()
 
 unsigned getters()
 {
-  EXPECT_THROW(1, std::out_of_range, (void)a.at(5));
-  ASSERT(2, a.ndims() == 2);
-  ASSERT(3, a.shape() == shape(2, 2));
-  ASSERT(4, a.size() == 4);
-  ASSERT(5, a.type() == type::int32);
+  ASSERT(1, a.at(2) == 0);
+  EXPECT_THROW(2, std::out_of_range, (void)a.at(5));
+  ASSERT(3, a.ndims() == 2);
+  ASSERT(4, a.shape() == shape(2, 2));
+  ASSERT(5, a.size() == 4);
+  ASSERT(6, a.type() == type::int32);
 
   TEST_SUCCESS;
 }
@@ -94,7 +108,7 @@ unsigned mutation()
 
 int main()
 {
-  UnitTestRunner tester { "core/array", "devi::core::array" };
+  UnitTestRunner tester { "src/core/array.hh", "devi::core::array" };
 
   tester.run("Operators", operators);
   tester.run("Construction", construction);

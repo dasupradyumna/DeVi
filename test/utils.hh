@@ -1,5 +1,5 @@
-#ifndef DEVI_TEST_UTILS_HH
-#define DEVI_TEST_UTILS_HH
+#ifndef _HEADER_GUARD__DEVI_TEST_UTILS_HH_
+#define _HEADER_GUARD__DEVI_TEST_UTILS_HH_
 
 // Wraps arguments (which contain commas) passed to other macros
 #define CODE(...) __VA_ARGS__
@@ -20,6 +20,9 @@
     }                                        \
     catch (const exception &) {              \
       break;                                 \
+    }                                        \
+    catch (...) {                            \
+      return id;                             \
     }                                        \
     return id;                               \
   }

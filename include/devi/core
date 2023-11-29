@@ -11,7 +11,10 @@ namespace devi::core
   using internal::int8, internal::int16, internal::int32, internal::int64;
   using internal::uint8, internal::uint16, internal::uint32, internal::uint64;
 
+  using internal::view;
+
   using internal::shape;
+  using internal::slice;
   using internal::type;
 
 }  // namespace devi::core

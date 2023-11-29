@@ -6,13 +6,14 @@
 #include <climits>
 #include <cstdint>
 
-// checking floating point widths
+// Checking C++ floating point width
 // TODO: add automatic datatype adjustment in case of failure
 static_assert(CHAR_BIT * sizeof(float) == 32, "'float' type should be 32 bits\n");
 static_assert(CHAR_BIT * sizeof(double) == 64, "'double' type should be 64 bits\n");
 
 namespace devi::core::internal
 {
+  // Library supported datatypes for array and view objects
   enum class type {
     // boolean
     bool8,
@@ -31,6 +32,7 @@ namespace devi::core::internal
     float64
   };
 
+  // Compile-time type mapper from supported datatypes to native C++ datatypes
   template<type _Type>
   struct native_type;
 
@@ -52,6 +54,6 @@ namespace devi::core::internal
   CORE2NATIVE(float32, float);
   CORE2NATIVE(float64, double);
 
-}  // namespace devi::core
+}  // namespace devi::core::internal
 
 #endif
