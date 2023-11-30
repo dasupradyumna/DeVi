@@ -69,6 +69,7 @@ namespace devi::core::internal
     // Inequality operator overload
     [[nodiscard]] bool operator!=(const array &other) const noexcept;
 
+    // XXX: remove this operator; currently only used for testing
     // Flat indexing into owned data
     [[nodiscard]] native_type &operator[](const std::size_t i) noexcept;
     [[nodiscard]] native_type operator[](const std::size_t i) const noexcept;
@@ -88,14 +89,6 @@ namespace devi::core::internal
 
   public:
     ////////////////////////////// GETTERS ///////////////////////////////
-
-    /* Return the element value at given flat index
-     *
-     * Errors:
-     * `std::out_of_range` is thrown if argument `i` fails the bounds check
-     * */
-    [[nodiscard]] native_type &at(const std::size_t i);
-    [[nodiscard]] native_type at(const std::size_t i) const;
 
     // Returns the dimensionality of the array
     [[nodiscard]] unsigned ndims() const noexcept;
@@ -326,20 +319,6 @@ namespace devi::core::internal
   }
 
   ////////////////////////////// GETTERS ///////////////////////////////
-
-  template<type _DType>
-  typename array<_DType>::native_type &array<_DType>::at(const std::size_t i)
-  {
-    if (i >= m_shape.size()) throw std::out_of_range { "Flat index out of bounds" };
-
-    return (*this)[i];
-  }
-
-  template<type _DType>
-  typename array<_DType>::native_type array<_DType>::at(const std::size_t i) const
-  {
-    return const_cast<array &>(*this).at(i);
-  }
 
   template<type _DType>
   unsigned array<_DType>::ndims() const noexcept

@@ -31,7 +31,7 @@ unsigned operators()
   ASSERT(7, a2(0, 3, 3) == 2 && a2(4, 4, 3) == 3);
 
   // equality
-  ASSERT(8, CODE(a != int32 { shape(4, 1) }));
+  ASSERT(8, a != int32(shape(4, 1)));
   ASSERT(9, a == a && a != a1 && a1 == a1);
 
   TEST_SUCCESS;
@@ -48,11 +48,11 @@ unsigned construction()
 
 unsigned copy_move()
 {
-  const auto t { int32 { shape(4, 1) } };
+  const int32 t { shape(4, 1) };
 
   // construction
   auto a1 { a };
-  auto a2 { int32 { shape(4, 1) } };
+  auto a2 { int32(shape(4, 1)) };
   ASSERT(1, CODE(a1 == a && a2 == t));
 
   // assignment
@@ -65,12 +65,10 @@ unsigned copy_move()
 
 unsigned getters()
 {
-  ASSERT(1, a.at(2) == 0);
-  EXPECT_THROW(2, std::out_of_range, (void)a.at(5));
-  ASSERT(3, a.ndims() == 2);
-  ASSERT(4, a.shape() == shape(2, 2));
-  ASSERT(5, a.size() == 4);
-  ASSERT(6, a.type() == type::int32);
+  ASSERT(1, a.ndims() == 2);
+  ASSERT(2, a.shape() == shape(2, 2));
+  ASSERT(3, a.size() == 4);
+  ASSERT(4, a.type() == type::int32);
 
   TEST_SUCCESS;
 }

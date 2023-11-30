@@ -54,19 +54,13 @@ namespace devi::core::internal
     using base_dimension::operator!=;
 
     // Returns value at specified index
+    [[nodiscard]] std::size_t &operator[](const unsigned idx) noexcept;
     [[nodiscard]] std::size_t operator[](const unsigned idx) const noexcept;
 
     // Overloading `std::ostream` for easy printing via `std::cout`
     friend std::ostream &operator<<(std::ostream &out, const shape &s);
 
     ////////////////////////////// GENERAL ///////////////////////////////
-
-    /* Return the dimension value at given flat index
-     *
-     * Errors:
-     * `std::out_of_range` is thrown if argument `i` fails the bounds check
-     * */
-    [[nodiscard]] std::size_t at(const unsigned i) const;
 
     // Returns the dimensionality of current shape
     [[nodiscard]] unsigned ndims() const noexcept;
@@ -95,7 +89,9 @@ namespace devi::core::internal
 
   template<typename... _Args>
   shape::shape(const _Args... args) : base_dimension { args... }
-  { }
+  {
+    static_assert(sizeof...(args) > 0, "`devi::core::shape` cannot be empty");
+  }
 
   //////////////////////// COPY-MOVE SEMANTICS /////////////////////////
 
@@ -111,6 +107,11 @@ namespace devi::core::internal
 
   ///////////////////////// OPERATOR OVERLOADS /////////////////////////
 
+  inline std::size_t &shape::operator[](const unsigned idx) noexcept
+  {
+    return p_data[idx];
+  }
+
   inline std::size_t shape::operator[](const unsigned idx) const noexcept
   {
     return p_data[idx];
@@ -122,13 +123,6 @@ namespace devi::core::internal
   }
 
   ////////////////////////////// GENERAL ///////////////////////////////
-
-  inline std::size_t shape::at(const unsigned i) const
-  {
-    if (i >= m_size) throw std::out_of_range { "Flat index out of bounds" };
-
-    return (*this)[i];
-  }
 
   inline unsigned shape::ndims() const noexcept { return m_size; }
 

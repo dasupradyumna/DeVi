@@ -49,14 +49,6 @@ namespace devi::core::internal
 
     ////////////////////////////// GETTERS ///////////////////////////////
 
-    /* Return the element value at given flat index
-     *
-     * Errors:
-     * `std::out_of_range` is thrown if argument `i` fails the bounds check
-     * */
-    [[nodiscard]] native_type &at(const std::size_t i);
-    [[nodiscard]] native_type at(const std::size_t i) const;
-
     // Returns the dimensionality of the view
     [[nodiscard]] unsigned ndims() const noexcept;
 
@@ -158,20 +150,6 @@ namespace devi::core::internal
 
   ////////////////////////////// GETTERS ///////////////////////////////
   // XXX: REFACTOR: implementation exactly same as array
-
-  template<type _DType>
-  typename view<_DType>::native_type &view<_DType>::at(const std::size_t i)
-  {
-    if (i >= m_shape.size()) throw std::out_of_range { "Flat index out of bounds" };
-
-    return (*this)[i];
-  }
-
-  template<type _DType>
-  typename view<_DType>::native_type view<_DType>::at(const std::size_t i) const
-  {
-    return const_cast<view &>(*this).at(i);
-  }
 
   template<type _DType>
   unsigned view<_DType>::ndims() const noexcept
