@@ -33,6 +33,7 @@ unsigned operators()
   // equality
   ASSERT(8, a != int32(shape(4, 1)));
   ASSERT(9, a == a && a != a1 && a1 == a1);
+  ASSERT(10, a != int64(shape(2, 2)) && !(a == float32(shape(2, 2))));
 
   TEST_SUCCESS;
 }

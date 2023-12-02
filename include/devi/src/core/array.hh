@@ -65,9 +65,13 @@ namespace devi::core::internal
 
     // Equality operator overload
     [[nodiscard]] bool operator==(const array &other) const noexcept;
+    template<enum type _Other>
+    [[nodiscard]] bool operator==(const array<_Other> &other) const noexcept;
 
     // Inequality operator overload
     [[nodiscard]] bool operator!=(const array &other) const noexcept;
+    template<enum type _Other>
+    [[nodiscard]] bool operator!=(const array<_Other> &other) const noexcept;
 
     // XXX: remove this operator; currently only used for testing
     // Flat indexing into owned data
@@ -225,10 +229,24 @@ namespace devi::core::internal
         && std::equal(p_data.get(), p_data.get() + m_shape.size(), other.p_data.get());
   }
 
+  template< type _DType>
+  template<type _Other>
+  bool array<_DType>::operator==(const array<_Other> &other) const noexcept
+  {
+    return false;
+  }
+
   template<type _DType>
   bool array<_DType>::operator!=(const array &other) const noexcept
   {
     return !(*this == other);
+  }
+
+  template< type _DType>
+  template<type _Other>
+  bool array<_DType>::operator!=(const array<_Other> &other) const noexcept
+  {
+    return true;
   }
 
   template<type _DType>
