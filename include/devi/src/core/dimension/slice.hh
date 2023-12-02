@@ -28,7 +28,14 @@ namespace devi::core::internal
     // Direct value initialization constructor
     slice(const std::size_t start, const std::size_t end, const std::size_t stride = 1)
       : m_start { start }, m_end { end }, m_stride { stride }
-    { }
+    {
+      if (start >= end)
+        throw std::invalid_argument {
+          "`stop` must be atleast one more than `start` in a slice"
+        };
+      else if (stride == 0)
+        throw std::invalid_argument { "`stride` must be non-zero in a slice" };
+    }
   };
 
   // Data structure for storing multi-dimensional slice information

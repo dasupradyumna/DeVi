@@ -42,6 +42,7 @@ namespace devi::core::internal
     [[nodiscard]] native_type operator[](const std::size_t i) const noexcept;
 
     // Multi-dimensional full indexing using integers
+    // FIX: add type checking for indices
     template<typename... _Indices>
     [[nodiscard]] native_type &operator()(const _Indices... indices);
     template<typename... _Indices>

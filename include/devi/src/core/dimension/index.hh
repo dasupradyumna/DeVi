@@ -106,6 +106,10 @@ namespace devi::core::internal
   {
     if (src == dst) return *this;
 
+    if (this->is_invalid(src))
+      throw std::out_of_range { "Index out of bounds for the given shape" };
+
+    // XXX: change this to an assert since it will only be used by the library
     if (src.size() != dst.size())
       throw std::invalid_argument {
         "Argument shapes are not compatible for transformation"

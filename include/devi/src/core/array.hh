@@ -78,7 +78,15 @@ namespace devi::core::internal
     [[nodiscard]] native_type &operator[](const std::size_t i) noexcept;
     [[nodiscard]] native_type operator[](const std::size_t i) const noexcept;
 
-    // Multi-dimensional full indexing using integers
+    /* Multi-dimensional full indexing using integers
+     *
+     * Errors:
+     * 1) `std::invalid_argument` if the number of `indices` arguments is not equal to
+     *    array's dimensionality
+     * 2) `std::out_of_range` if the argument index is valid but out of bounds for atleast
+     *    one dimension in array's shape
+     */
+    // TEST: can typename parameters be replaced with non-type std::size_t parameters?
     template<typename... _Indices,
       typename = std::enable_if_t<(std::is_integral_v<_Indices> && ...)>>
     [[nodiscard]] native_type &operator()(const _Indices... indices);
@@ -289,7 +297,6 @@ namespace devi::core::internal
     inline void _slice_extractor(
       const slice &s, slice_data &starts, slice_data &ends, slice_data &strides)
     {
-      // TODO: implement default values
       starts.append(s.m_start);
       ends.append(s.m_end);
       strides.append(s.m_stride);
@@ -314,6 +321,7 @@ namespace devi::core::internal
       };
 
     // FIX: do slice and index bounds checking before calculation
+    // TODO: implement default values for missing trailing slices
 
     auto shape_stride { slice_data::get_stride(m_shape) };
     slice_data starts {}, ends {}, strides {};

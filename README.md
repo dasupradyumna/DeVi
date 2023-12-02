@@ -122,7 +122,7 @@ assignable. The type of data stored by the array is specified by its template ar
     *(`native_type` is the C++ builtin type that corresponds to the respective `devi::core::type`)*
 
     ```cpp
-    array<type::int32> I { shape(1920, 1080) };        // 1920x1080 array filled with zeros
+    array<type::int32> I { shape(1920, 1080) };        // 1920x1080 array filled with 0s
     int32 i1 { shape(1920, 1080) };                    // Identical to above declaration
     array<type::float32> F { shape(1920, 1080), 10 };  // 1920x1080 array filled with 10s
     float32 f1 { shape(1920, 1080), 10 };              // Identical to above declaration
@@ -183,13 +183,13 @@ assignable. The type of data stored by the array is specified by its template ar
     Flattens the multi-dimensional array into a 1D array while preserving the total owned size
   - `template<typename... _Args>`  
     `void array::reshape(const _Args... args)`: Parameter Pack Version  
-    `void array::reshape(const shape &s)`: L-value `shape` Version  
-    `void array::reshape(shape &&s) noexcept`: R-value `shape` Version  
+    `void array::reshape(const shape &s)`: L-value Reference `shape` Version  
+    `void array::reshape(shape &&s) noexcept`: R-value Reference `shape` Version  
     Changes the shape of the array while preserving the total owned size
   - `void array::squeeze() noexcept`  
     Removes all unit dimensions in the shape of the array
-  - `void swap(array &b) noexcept`: L-value Version  
-    `void swap(array &&b) noexcept`: R-value Version  
+  - `void array::swap(array &b) noexcept`: L-value Reference Version  
+    `void array::swap(array &&b) noexcept`: R-value Reference Version  
     Swaps the owned data and the shapes of the arrays
 
     ```cpp
@@ -205,3 +205,112 @@ assignable. The type of data stored by the array is specified by its template ar
     i2.squeeze();                   // All unit dimensions are removed
     assert(i2.shape() == shape(120, 9, 1920));
     ```
+
+- **Indexing**  
+    `template<typename... _Indices, typename>`  
+    `native_type &array::operator()(const _Indices... indices)`  
+    Returns a non-const reference to the value specified by the index `indices`  
+    `template<typename... _Indices, typename>`  
+    `native_type array::operator()(const _Indices... indices) const`  
+    Returns a copy of the value specified by the index `indices`
+
+    *The second template parameter is used for compile-time type checking using **SFINAE***
+
+    Exceptions:  
+    1) `std::invalid_argument` if the number of `indices` arguments is not equal to array's
+       dimensionality
+    2) `std::out_of_range` if the number of argument `indices` is valid, but out of bounds for
+       atleast one dimension in array's shape
+
+    ```cpp
+    uint16 u1 { shape(20, 100, 80) };
+    u1(5, 67, 83) = 42;
+    u1(3, 12, 21, 1);    // Throws `std::invalid_argument`; too many indices
+    u1(10, 8);           // Throws `std::invalid_argument`; not enough indices
+    u1(16, 79, 91);      // Throws `std::out_of_range`; 3rd index is out of bounds
+    ```
+
+- **Slicing** *(incomplete)*  
+
+    `devi::core::slice`  
+    The library provides this struct for users to specify how to slice a dimension. A `slice`
+    constitutes of a **start** index, a **stop** index and a **stride** value (defaults to 1); this
+    slice denotes all values beginning from (and including) **start** until (and excluding)
+    **stop**, picking elements **stride** indices apart. The **stop** index *MUST* be atleast one
+    more than the **start** index, whereas **stride** *MUST* be a non-zero value.
+
+    `template<typename... _Slices, typename>`  
+    `view<_DType> array::operator()(const _Slices &...slices)`  
+    Returns a `view` object that is the result of the specified slicing  
+    Each `slices` argument can either be a `slice` object or an integral index
+
+    *The second template parameter is used for compile-time type checking using **SFINAE***
+
+    Exceptions:  
+    `std::invalid_argument` if the number of `slices` arguments is greater than array's
+    dimensionality  
+    **TODO:** bounds checking for the slices and the integer
+
+    ```cpp
+    using s_ = slice;
+    view<type::uint16> v1 { u1(s_(7, 15), 56, s_(10, 69, 3)) };
+    // The view `v1` has shape `( 8 20 )`
+    // 1st dimension: from 7 to 14, every element = (15 - 7) / 1 = 8
+    // 2nd dimension: picked 56 = no dimension
+    // 3rd dimension: from 10 to 67, every 3rd element = (69 - 10) / 3 + 1 = 20
+    ```
+
+#### 4. `devi::core::view`
+
+This class represents a **data-viewing** and **non-owning** window into an array or another view
+object. It is copyable, movable and assignable. There is *no guarantee* for the memory that is
+handled by the view to be contiguous. A **view** can never be constructed by the user manually; they
+can **only** be created by a slicing operation on arrays or other views.
+
+*It is intended for `view` and `array` to have the same API for a consistent experience*
+
+- **Getters**  
+  - `unsigned view::ndims() const noexcept`  
+    Returns the dimensionality of the view
+  - `const class shape &view::shape() const noexcept`  
+    Returns the shape of the view
+  - `std::size_t view::size() const noexcept`  
+    Returns the total size of the view
+  - `enum type view::type() const noexcept`  
+    Returns the `devi::core::type` of the view
+
+    ```cpp
+    using s_ = slice;
+    uint64 u2 { shape(4, 10, 150, 90), 1 };
+    auto v2 { u2(s_(0, 4), 3, s_(40, 120, 8), s_(30, 80)) };
+    assert(v2.ndims() == 3);
+    assert(v2.shape() == shape(4, 10, 50));
+    assert(v2.size() == 2000);
+    assert(v2.type() == type::uint64);
+    ```
+
+- **Indexing**  
+    `template<typename... _Indices, typename>`  
+    `native_type &view::operator()(const _Indices... indices)`  
+    Returns a non-const reference to the value specified by the index `indices`  
+    `template<typename... _Indices, typename>`  
+    `native_type view::operator()(const _Indices... indices) const`  
+    Returns a copy of the value specified by the index `indices`
+
+    *The second template parameter is used for compile-time type checking using **SFINAE***
+
+    Exceptions:  
+    1) `std::invalid_argument` if the number of `indices` arguments is not equal to view's
+       dimensionality
+    2) `std::out_of_range` if the number of argument `indices` is valid, but out of bounds for
+       atleast one dimension in view's shape
+
+    ```cpp
+    v2(2, 7, 33) = 42;      // This will modify the value in the appropriate `u2` memory
+    assert(u2(2, 3, 96, 63) == 42);
+    v2(3, 7, 21, 1);        // Throws `std::invalid_argument`; too many indices
+    v2(1, 8);               // Throws `std::invalid_argument`; not enough indices
+    v2(16, 9, 41);          // Throws `std::out_of_range`; 3rd index is out of bounds
+    ```
+
+***TODO:** implement a `const_view` object which is a non-mutable window into the memory it slices*
