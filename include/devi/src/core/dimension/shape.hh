@@ -63,7 +63,10 @@ namespace devi::core::internal
     ////////////////////////////// GENERAL ///////////////////////////////
 
     // Returns the dimensionality of current shape
-    [[nodiscard]] unsigned ndims() const noexcept;
+    using base_dimension::ndims;
+
+    // Remove all zero values from current data
+    using base_dimension::remove_zeros;
 
     // Returns the total size held by current shape
     [[nodiscard]] std::size_t size() const noexcept;
@@ -123,8 +126,6 @@ namespace devi::core::internal
   }
 
   ////////////////////////////// GENERAL ///////////////////////////////
-
-  inline unsigned shape::ndims() const noexcept { return m_size; }
 
   inline std::size_t shape::size() const noexcept
   {

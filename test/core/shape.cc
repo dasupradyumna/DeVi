@@ -52,7 +52,11 @@ unsigned general()
   ASSERT(1, s1.ndims() == 3 && s1.size() == 30);
   ASSERT(2, s2.ndims() == 2 && s2.size() == 0);
 
-  auto s { s1 };
+  auto s { s2 };
+  s.remove_zeros();
+  ASSERT(3, s == shape(5));
+
+  s = s1;
   s.squeeze();
   ASSERT(3, s == shape(3, 10));
 

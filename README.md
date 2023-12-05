@@ -230,34 +230,52 @@ assignable. The type of data stored by the array is specified by its template ar
     u1(16, 79, 91);      // Throws `std::out_of_range`; 3rd index is out of bounds
     ```
 
-- **Slicing** *(incomplete)*  
+- **Slicing**  
 
-    `devi::core::slice`  
-    The library provides this struct for users to specify how to slice a dimension. A `slice`
-    constitutes of a **start** index, a **stop** index and a **stride** value (defaults to 1); this
-    slice denotes all values beginning from (and including) **start** until (and excluding)
-    **stop**, picking elements **stride** indices apart. The **stop** index *MUST* be atleast one
-    more than the **start** index, whereas **stride** *MUST* be a non-zero value.
+  - `devi::core::slice`  
+    The library provides this struct for users to specify how to slice an array dimension. A `slice`
+    constitutes of a **begin** index, an **end** index and a **stride** value; this slice denotes
+    all values beginning from (and including) **begin** until (and excluding) **end**, picking
+    elements **stride** indices apart.  
+    All three arguments are optional. **begin** index defaults to 0 (start of a dimension), **end**
+    index defaults to 0 (will be converted to end of a dimension), **stride** value defaults to 1
+    (no element is skipped).  
+    The **end** index (when specified) *MUST* be atleast one more than the **begin** index, whereas
+    **stride** *MUST* be a non-zero value.
 
-    `template<typename... _Slices, typename>`  
+    Exceptions (by constructor):  
+    `std::invalid_argument` if **begin** index is greater than or equal to **end** index, or if
+    **stride** value is **zero**
+
+  - `template<typename... _Slices, typename>`  
     `view<_DType> array::operator()(const _Slices &...slices)`  
-    Returns a `view` object that is the result of the specified slicing  
-    Each `slices` argument can either be a `slice` object or an integral index
+    Returns a `view` object that is the result of the specified slicing.  
+    Each `slices` argument can either be a `slice` object or an integral index.  
+    If the number of `slices` arguments is less than the array's dimensionality, the missing slices
+    are automatically assumed to span the entire corresponding dimension.
 
     *The second template parameter is used for compile-time type checking using **SFINAE***
 
     Exceptions:  
-    `std::invalid_argument` if the number of `slices` arguments is greater than array's
-    dimensionality  
-    **TODO:** bounds checking for the slices and the integer
+    1) `std::invalid_argument` if the number of `slices` arguments is greater than array's
+       dimensionality  
+    2) `std::out_of_range` if the number of argument `slices` is valid, but out of bounds for
+       atleast one dimension in array's shape, i.e. if `slices` is an integer, it is out of bounds
+       of array shape and if `slices` is a `devi::core::slice` object, the begin or end or both are
+       out of bounds of array shape
 
     ```cpp
     using s_ = slice;
     view<type::uint16> v1 { u1(s_(7, 15), 56, s_(10, 69, 3)) };
     // The view `v1` has shape `( 8 20 )`
-    // 1st dimension: from 7 to 14, every element = (15 - 7) / 1 = 8
+    // 1st dimension: from 7 to 14, (implicit) every element = (15 - 7) / 1 = 8
     // 2nd dimension: picked 56 = no dimension
     // 3rd dimension: from 10 to 67, every 3rd element = (69 - 10) / 3 + 1 = 20
+    view<type::uint16> v2 { u1(6, s_(20)) };
+    // The view `v2` has shape `( 80 80 )`
+    // 1st dimension: picked 6 = no dimension
+    // 2nd dimension: from 20 to (implicit) 100, every element = (100 - 20) / 1 = 80
+    // 3rd dimension: unspecified = entire dimension = 80
     ```
 
 #### 4. `devi::core::view`

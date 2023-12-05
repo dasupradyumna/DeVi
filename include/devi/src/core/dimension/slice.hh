@@ -23,22 +23,15 @@ namespace devi::core::internal
 {
   // Represents a one-dimensional slice object
   struct slice {
-    std::size_t m_start, m_end, m_stride;
+    std::size_t m_begin, m_end, m_stride;
 
     // Direct value initialization constructor
-    slice(const std::size_t start, const std::size_t end, const std::size_t stride = 1)
-      : m_start { start }, m_end { end }, m_stride { stride }
-    {
-      if (start >= end)
-        throw std::invalid_argument {
-          "`stop` must be atleast one more than `start` in a slice"
-        };
-      else if (stride == 0)
-        throw std::invalid_argument { "`stride` must be non-zero in a slice" };
-    }
+    slice(const std::size_t begin = 0, const std::size_t end = 0,
+      const std::size_t stride = 1);
   };
 
   // Data structure for storing multi-dimensional slice information
+  // CHECK: can this be removed? is it same as `base_dimension`?
   class slice_data : public base_dimension {
   public:
     //////////////////////////// CONSTRUCTORS ////////////////////////////
@@ -67,17 +60,11 @@ namespace devi::core::internal
 
     ////////////////////////////// GENERAL ///////////////////////////////
 
-    // Appends argument value to current slice data
-    void append(const std::size_t value);
-
-    // Build an identical `shape` object from current data
-    shape make_shape() const;
-
     // Getter method for `m_size` attribute
-    [[nodiscard]] unsigned ndims() const noexcept;
+    using base_dimension::ndims;
 
     // Remove all zero values from current data
-    void remove_zeros() noexcept;
+    using base_dimension::remove_zeros;
 
   };  // class slice_data
 
@@ -115,6 +102,26 @@ namespace devi::core::internal
 //////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////// IMPLEMENTATION /////////////////////////////////////
 
+////////////////////////////////// SLICE_DATA //////////////////////////////////
+
+namespace devi::core::internal
+{
+  inline slice::slice(
+    const std::size_t begin, const std::size_t end, const std::size_t stride)
+    : m_begin { begin }, m_end { end }, m_stride { stride }
+  {
+    if (end && begin >= end)
+      // `begin` must be less than `end` when `end` is non-zero
+      throw std::invalid_argument {
+        "`end` must be atleast one more than `begin` in a slice"
+      };
+    else if (stride == 0)
+      throw std::invalid_argument { "`stride` must be non-zero in a slice" };
+  }
+
+}  // namespace devi::core::internal
+
+////////////////////////////////// SLICE_DATA //////////////////////////////////
 namespace devi::core::internal
 {
   //////////////////////////// CONSTRUCTORS ////////////////////////////
@@ -142,28 +149,6 @@ namespace devi::core::internal
   inline std::size_t slice_data::operator[](const unsigned index) const noexcept
   {
     return p_data[index];
-  }
-
-  ////////////////////////////// GENERAL ///////////////////////////////
-
-  inline void slice_data::append(const std::size_t value)
-  {
-    if (m_size == MAX_SIZE)
-      throw std::length_error { "Cannot append to a 10-D `slice_data` object" };
-
-    p_data[m_size++] = value;
-  }
-
-  inline shape slice_data::make_shape() const { return { *this }; }
-
-  inline unsigned slice_data::ndims() const noexcept { return m_size; }
-
-  inline void slice_data::remove_zeros() noexcept
-  {
-    unsigned i { -1U }, j { 0 };
-    while (++i < m_size)
-      if (p_data[i] != 0) p_data[j++] = p_data[i];
-    m_size = j;
   }
 
 }  // namespace devi::core::internal

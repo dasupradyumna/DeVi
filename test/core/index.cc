@@ -32,23 +32,10 @@ unsigned test_slice_data()
   auto stride { slice_data::get_stride(s) };
   ASSERT(1, CODE(stride == slice_data { 720, 120, 24, 6, 2, 1, 1 }));
 
-  // append()
-  stride[1] = 0;
-  stride.append(0);
-  ASSERT(2, CODE(stride == slice_data { 720, 0, 24, 6, 2, 1, 1, 0 }));
-
-  // ndims()
-  stride.append(5);
-  ASSERT(3, stride.ndims() == 9);
-
-  // append() exception
-  stride.append(0);
-  EXPECT_THROW(4, std::length_error, stride.append(100));
-
-  // remove_zeros() and make_shape()
+  // remove_zeros()
+  stride[1] = stride[4] = 0;
   stride.remove_zeros();
-  ASSERT(5, CODE(stride == slice_data { 720, 24, 6, 2, 1, 1, 5 }));
-  ASSERT(6, CODE(stride.make_shape() == shape { 720, 24, 6, 2, 1, 1, 5 }));
+  ASSERT(2, CODE(stride == slice_data { 720, 24, 6, 1, 1 }));
 
   TEST_SUCCESS;
 }

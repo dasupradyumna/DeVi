@@ -56,6 +56,12 @@ namespace devi::core::internal
     // Inequality operator overload
     [[nodiscard]] bool operator!=(const base_dimension &other) const noexcept;
 
+    // Getter for `m_size`
+    [[nodiscard]] unsigned ndims() const noexcept;
+
+    // Pop all zeros from data
+    void remove_zeros() noexcept;
+
     // Swap state with existing object
     void swap(base_dimension &b) noexcept;
     // Swap state with temporary object
@@ -119,6 +125,16 @@ namespace devi::core::internal
   inline bool base_dimension::operator!=(const base_dimension &other) const noexcept
   {
     return !(*this == other);
+  }
+
+  inline unsigned base_dimension::ndims() const noexcept { return m_size; }
+
+  inline void base_dimension::remove_zeros() noexcept
+  {
+    unsigned i { -1U }, j { 0 };
+    while (++i < m_size)
+      if (p_data[i] != 0) p_data[j++] = p_data[i];
+    m_size = j;
   }
 
   inline void base_dimension::swap(base_dimension &b) noexcept

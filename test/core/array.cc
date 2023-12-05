@@ -22,18 +22,25 @@ unsigned operators()
   // multi-dimensional slicing
   using s = slice;
   int64 a2 { shape(5, 8, 6), 1 };
+  // too many slices
   EXPECT_THROW(5, std::invalid_argument, (void)a2(s(0, 5, 2), s(3, 6), 3, 4));
+  // zero stride is invalid
+  EXPECT_THROW(6, std::invalid_argument, (void)a2(s(0, 5, 0), s(3, 6), 3));
+  // slice; begin > end
+  EXPECT_THROW(7, std::invalid_argument, (void)a2(s(0, 5, 2), s(8, 6), 3));
+  // slice out of bounds
+  EXPECT_THROW(8, std::out_of_range, (void)a2(s(0, 5, 2), s(3, 10), 3));
   view<type::int64> v { a2(s(0, 5, 2), s(3, 6), 3) };
-  ASSERT(6, v.ndims() == 2 && v.shape() == shape(3, 3) && v.size() == 9
+  ASSERT(9, v.ndims() == 2 && v.shape() == shape(3, 3) && v.size() == 9
               && v.type() == type::int64);
   v(0, 0) = 2;
   v(2, 1) = 3;
-  ASSERT(7, a2(0, 3, 3) == 2 && a2(4, 4, 3) == 3);
+  ASSERT(10, a2(0, 3, 3) == 2 && a2(4, 4, 3) == 3);
 
   // equality
-  ASSERT(8, a != int32(shape(4, 1)));
-  ASSERT(9, a == a && a != a1 && a1 == a1);
-  ASSERT(10, a != int64(shape(2, 2)) && !(a == float32(shape(2, 2))));
+  ASSERT(11, a != int32(shape(4, 1)));
+  ASSERT(12, a == a && a != a1 && a1 == a1);
+  ASSERT(13, a != int64(shape(2, 2)) && !(a == float32(shape(2, 2))));
 
   TEST_SUCCESS;
 }

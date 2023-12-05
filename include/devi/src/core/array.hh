@@ -294,20 +294,29 @@ namespace devi::core::internal
 
   namespace  // for internal linkage
   {
-    inline void _slice_extractor(
-      const slice &s, slice_data &starts, slice_data &ends, slice_data &strides)
+    // Calculate view specifications from slice and array shape
+    inline void slice_to_view(const slice &slice, const std::size_t dim,
+      std::size_t &v_begin, std::size_t &v_dim, std::size_t &v_stride)
     {
-      starts.append(s.m_start);
-      ends.append(s.m_end);
-      strides.append(s.m_stride);
+      if (slice.m_end > dim || slice.m_begin >= dim)
+        throw std::out_of_range { "Slicing: given slice out of bounds" };
+
+      v_begin += v_stride * slice.m_begin;
+      // if `slice.m_end` is zero, replace with current `dim`
+      v_dim = (slice.m_end + (slice.m_end == 0) * dim) - slice.m_begin;
+      // v_dim = ceil(v_dim / slice.m_stride)
+      v_dim = v_dim / slice.m_stride + (v_dim % slice.m_stride > 0);
+      v_stride *= slice.m_stride;
     }
 
-    inline void _slice_extractor(
-      const std::size_t i, slice_data &starts, slice_data &ends, slice_data &strides)
+    // Calculate view specifications from index and array shape
+    inline void slice_to_view(const std::size_t idx, const std::size_t dim,
+      std::size_t &v_begin, std::size_t &v_dim, std::size_t &v_stride)
     {
-      starts.append(i);
-      ends.append(0);
-      strides.append(0);
+      if (idx >= dim) throw std::out_of_range { "Slicing: given index out of bounds" };
+
+      v_begin += v_stride * idx;
+      v_dim = v_stride = 0;
     }
   }
 
@@ -320,28 +329,20 @@ namespace devi::core::internal
         "Slice must have atmost the same dimensionality as array shape"
       };
 
-    // FIX: do slice and index bounds checking before calculation
-    // TODO: implement default values for missing trailing slices
+    unsigned i { 0 };
+    std::size_t v_begin { 0 };
+    // Both shape and stride are pre-filled with default values
+    auto v_shape { m_shape };                           // Shape of the resulting view
+    auto v_stride { slice_data::get_stride(m_shape) };  // Stride of the resulting view
 
-    auto shape_stride { slice_data::get_stride(m_shape) };
-    slice_data starts {}, ends {}, strides {};
-    (_slice_extractor(slices, starts, ends, strides), ...);
+    // Handle all the slices/indices specified by the user
+    ((slice_to_view(slices, m_shape[i], v_begin, v_shape[i], v_stride[i]), ++i), ...);
 
-    // TODO: move this into `view` constructor?
-    std::size_t start { 0 };
-    for (auto i { -1U }; ++i < m_shape.ndims();) {
-      start += shape_stride[i] * starts[i];
-      if (strides[i]) {
-        ends[i] -= starts[i];
-        ends[i] = ends[i] / strides[i] + (ends[i] % strides[i] > 0);
-        strides[i] *= shape_stride[i];
-      }
-    }
+    // Remove all the zero dimensions (the dimensions specified by an index)
+    v_shape.remove_zeros();
+    v_stride.remove_zeros();
 
-    strides.remove_zeros();
-    ends.remove_zeros();
-
-    return view<_DType> { p_data.get(), ends.make_shape(), start, strides };
+    return { p_data.get(), std::move(v_shape), v_begin, std::move(v_stride) };
   }
 
   ////////////////////////////// GETTERS ///////////////////////////////
