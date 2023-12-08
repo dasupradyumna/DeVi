@@ -86,7 +86,6 @@ namespace devi::core::internal
      * 2) `std::out_of_range` if the argument index is valid but out of bounds for atleast
      *    one dimension in array's shape
      */
-    // TEST: can typename parameters be replaced with non-type std::size_t parameters?
     template<typename... _Indices,
       typename = std::enable_if_t<(std::is_integral_v<_Indices> && ...)>>
     [[nodiscard]] native_type &operator()(const _Indices... indices);
@@ -276,12 +275,11 @@ namespace devi::core::internal
   typename array<_DType>::native_type &array<_DType>::operator()(
     const _Indices... indices)
   {
-    if (sizeof...(indices) != m_shape.ndims())
-      throw std::invalid_argument {
-        "Index must have same dimensionality as array shape"
-      };
+    index index { indices... };
+    index.throw_if_dimensionality_not_equal_to(m_shape);
+    index.throw_if_out_of_bounds_of(m_shape);
 
-    return p_data[index(indices...).flat(m_shape)];
+    return p_data[index.flat(m_shape)];
   }
 
   template<type _DType>

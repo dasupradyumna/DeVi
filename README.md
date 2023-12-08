@@ -282,8 +282,8 @@ assignable. The type of data stored by the array is specified by its template ar
 
 This class represents a **data-viewing** and **non-owning** window into an array or another view
 object. It is copyable, movable and assignable. There is *no guarantee* for the memory that is
-handled by the view to be contiguous. A **view** can never be constructed by the user manually; they
-can **only** be created by a slicing operation on arrays or other views.
+handled by the view to be contiguous. A **view** can never be constructed by the user; they can
+**only** be created by a slicing operation on arrays or other views.
 
 *It is intended for `view` and `array` to have the same API for a consistent experience*
 

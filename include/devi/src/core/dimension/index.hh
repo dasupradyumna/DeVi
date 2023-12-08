@@ -37,25 +37,43 @@ namespace devi::core::internal
     index(const _Args... args);
 
     // Static constructor for an `index` from argument `shape` and flat index `i`
-    static index from_flat(const shape &shape, const std::size_t i);
+    [[nodiscard]] static index from_flat(const shape &shape, const std::size_t i);
 
     ////////////////////////////// GENERAL ///////////////////////////////
 
-    // Returns the dot product between current index and argument `data`
-    [[nodiscard]] std::size_t dot(const slice_data &data) const;
+    /* Returns the dot product between current index and argument `data`
+     *
+     * Precondition: `data` must have same dimensionality as the index
+     */
+    [[nodiscard]] std::size_t dot(const slice_data &data) const noexcept;
 
-    // Returns a flat offset obtained by converting current index using argument shape
-    [[nodiscard]] std::size_t flat(const shape &shape) const;
+    /* Returns a flat offset obtained by converting current index using argument shape
+     *
+     * Precondition:
+     * index must have same dimensionality as `shape`
+     * index must be within bounds for `shape`
+     */
+    [[nodiscard]] std::size_t flat(const shape &shape) const noexcept;
 
-    // Transforms current index from shape `src` to shape `dst`
-    [[nodiscard]] const index &transform(const shape &src, const shape &dst);
-
-  private:
-    // Checks if current index is invalid for argument shape
-    [[nodiscard]] bool is_invalid(const shape &shape) const;
+    /* Transforms current index from shape `src` to shape `dst`
+     *
+     * Precondition:
+     * index must have same dimensionality as `src`
+     * index must be within bounds for `src`
+     */
+    [[nodiscard]] const index &transform(const shape &src, const shape &dst) noexcept;
 
     // Replace current index with the index calculated from `shape` and flat index `i`
     [[nodiscard]] const index &unflat(const shape &shape, const std::size_t i) noexcept;
+
+    //////////////////////// PRECONDITION CHECKS /////////////////////////
+
+    // Checks if current index is invalid for argument shape
+    void throw_if_out_of_bounds_of(const shape &shape) const;
+
+    // Checks if current index has same dimensionality as the argument
+    void throw_if_dimensionality_not_equal_to(const shape &other) const;
+    void throw_if_dimensionality_not_equal_to(const slice_data &other) const;
 
   };  // class index
 
@@ -63,6 +81,8 @@ namespace devi::core::internal
 
 //////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////// IMPLEMENTATION /////////////////////////////////////
+
+#include <cassert>
 
 namespace devi::core::internal
 {
@@ -80,52 +100,32 @@ namespace devi::core::internal
 
   ////////////////////////////// GENERAL ///////////////////////////////
 
-  inline std::size_t index::dot(const slice_data &data) const
+  inline std::size_t index::dot(const slice_data &data) const noexcept
   {
-    if (m_size != data.ndims())
-      throw std::invalid_argument { "Index is incompatible with given slice data" };
-
     std::size_t dot { 0 };
     for (unsigned i { -1U }; ++i < m_size;) dot += p_data[i] * data[i];
 
     return dot;
   }
 
-  inline std::size_t index::flat(const shape &shape) const
+  inline std::size_t index::flat(const shape &shape) const noexcept
   {
-    if (this->is_invalid(shape))
-      throw std::out_of_range { "Index out of bounds for the given shape" };
-
     std::size_t stride { 1 }, flat { 0 };
     for (auto i { m_size }; i--; stride *= shape[i]) flat += stride * p_data[i];
 
     return flat;
   }
 
-  inline const index &index::transform(const shape &src, const shape &dst)
+  inline const index &index::transform(const shape &src, const shape &dst) noexcept
   {
+    // Check for identity and skip if satisfied
     if (src == dst) return *this;
 
-    if (this->is_invalid(src))
-      throw std::out_of_range { "Index out of bounds for the given shape" };
-
-    // XXX: change this to an assert since it will only be used by the library
-    if (src.size() != dst.size())
-      throw std::invalid_argument {
-        "Argument shapes are not compatible for transformation"
-      };
+    assert(
+      (src.size() != dst.size())
+      && "Argument shapes `src` and `dst` are not compatible for index transformation");
 
     return this->unflat(dst, this->flat(src));
-  }
-
-  inline bool index::is_invalid(const shape &shape) const
-  {
-    if (m_size != shape.ndims())
-      throw std::invalid_argument { "Index is incompatible with given shape" };
-
-    for (unsigned i { -1U }; ++i < m_size;)
-      if (p_data[i] >= shape[i]) return true;
-    return false;
   }
 
   inline const index &index::unflat(const shape &shape, const std::size_t i) noexcept
@@ -136,6 +136,31 @@ namespace devi::core::internal
       p_data[i] = (flat % (stride * shape[i])) / stride;
 
     return *this;
+  }
+
+  //////////////////////// PRECONDITION CHECKS /////////////////////////
+
+  inline void index::throw_if_out_of_bounds_of(const shape &shape) const
+  {
+    for (unsigned i { -1U }; ++i < m_size;)
+      if (p_data[i] >= shape[i])
+        throw std::out_of_range { "Index is out of bounds for the argument `shape`" };
+  }
+
+  inline void index::throw_if_dimensionality_not_equal_to(const shape &other) const
+  {
+    if (m_size != other.ndims())
+      throw std::invalid_argument {
+        "Index does not have same dimensionality as argument `shape`"
+      };
+  }
+
+  inline void index::throw_if_dimensionality_not_equal_to(const slice_data &other) const
+  {
+    if (m_size != other.ndims())
+      throw std::invalid_argument {
+        "Index does not have same dimensionality as argument `slice_data`"
+      };
   }
 
 }  // namespace devi::core::internal

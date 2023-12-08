@@ -41,11 +41,19 @@ namespace devi::core::internal
     [[nodiscard]] native_type &operator[](const std::size_t i) noexcept;
     [[nodiscard]] native_type operator[](const std::size_t i) const noexcept;
 
-    // Multi-dimensional full indexing using integers
-    // FIX: add type checking for indices
-    template<typename... _Indices>
+    /* Multi-dimensional full indexing using integers
+     *
+     * Errors:
+     * 1) `std::invalid_argument` if the number of `indices` arguments is not equal to
+     *    view's dimensionality
+     * 2) `std::out_of_range` if the argument index is valid but out of bounds for atleast
+     *    one dimension in view's shape
+     */
+    template<typename... _Indices,
+      typename = std::enable_if_t<(std::is_integral_v<_Indices> && ...)>>
     [[nodiscard]] native_type &operator()(const _Indices... indices);
-    template<typename... _Indices>
+    template<typename... _Indices,
+      typename = std::enable_if_t<(std::is_integral_v<_Indices> && ...)>>
     [[nodiscard]] native_type operator()(const _Indices... indices) const;
 
     ////////////////////////////// GETTERS ///////////////////////////////
@@ -132,17 +140,18 @@ namespace devi::core::internal
   }
 
   template<type _DType>
-  template<typename... _Indices>
+  template<typename... _Indices, typename>
   typename view<_DType>::native_type &view<_DType>::operator()(const _Indices... indices)
   {
-    if (sizeof...(indices) != m_shape.ndims())
-      throw std::invalid_argument { "Index must have same dimensionality as view shape" };
+    index index { indices... };
+    index.throw_if_dimensionality_not_equal_to(m_shape);
+    index.throw_if_out_of_bounds_of(m_shape);
 
-    return p_iter.flat(index(indices...).transform(m_shape, p_iter.m_shape));
+    return p_iter.flat(index.transform(m_shape, p_iter.m_shape));
   }
 
   template<type _DType>
-  template<typename... _Indices>
+  template<typename... _Indices, typename>
   typename view<_DType>::native_type view<_DType>::operator()(
     const _Indices... indices) const
   {
@@ -188,6 +197,8 @@ namespace devi::core::internal
   typename view<_DType>::native_type &view<_DType>::iterator::flat(
     const index &index) const
   {
+    index.throw_if_dimensionality_not_equal_to(m_stride);
+
     return p_source[m_start + index.dot(m_stride)];
   }
 

@@ -30,17 +30,19 @@ unsigned operators()
   EXPECT_THROW(7, std::invalid_argument, (void)a2(s(0, 5, 2), s(8, 6), 3));
   // slice out of bounds
   EXPECT_THROW(8, std::out_of_range, (void)a2(s(0, 5, 2), s(3, 10), 3));
-  view<type::int64> v { a2(s(0, 5, 2), s(3, 6), 3) };
-  ASSERT(9, v.ndims() == 2 && v.shape() == shape(3, 3) && v.size() == 9
-              && v.type() == type::int64);
-  v(0, 0) = 2;
-  v(2, 1) = 3;
+  view<type::int64> v1 { a2(s(0, 5, 2), s(3, 6), 3) };
+  ASSERT(9, v1.ndims() == 2 && v1.shape() == shape(3, 3) && v1.size() == 9
+              && v1.type() == type::int64);
+  v1(0, 0) = 2;
+  v1(2, 1) = 3;
   ASSERT(10, a2(0, 3, 3) == 2 && a2(4, 4, 3) == 3);
+  auto v2 { a2(s(), s(4)) };
+  ASSERT(11, v2.shape() == shape(5, 4, 6) && v2.type() == type::int64);
 
   // equality
-  ASSERT(11, a != int32(shape(4, 1)));
-  ASSERT(12, a == a && a != a1 && a1 == a1);
-  ASSERT(13, a != int64(shape(2, 2)) && !(a == float32(shape(2, 2))));
+  ASSERT(12, a != int32(shape(4, 1)));
+  ASSERT(13, a == a && a != a1 && a1 == a1);
+  ASSERT(14, a != int64(shape(2, 2)) && !(a == float32(shape(2, 2))));
 
   TEST_SUCCESS;
 }
